@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vicky AI</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Markdown parser for clean AI responses -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 flex flex-col h-[100dvh] font-sans antialiased overflow-hidden">
+
+  <!-- Header -->
+  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+        V
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-white leading-tight">Vicky AI <span class="text-xs text-indigo-400 font-normal">விக்கி</span></h1>
+        <p class="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online • Bilingual
+        </p>
+      </div>
+    </div>
+    <button id="settings-btn" class="text-slate-400 hover:text-white p-2 rounded-lg bg-slate-800 border border-slate-700 text-sm">
+      ⚙️ Key
+    </button>
+  </header>
+
+  <!-- Chat History Screen -->
+  <main id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4">
+    <!-- Welcome message -->
+    <div class="flex gap-3">
+      <div class="w-7 h-7 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white">V</div>
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl rounded-tl-sm p-3.5 max-w-[85%] text-sm leading-relaxed shadow-sm">
+        வணக்கம்! நான் <strong>Vicky AI</strong>. How can I help you today? Please tap the ⚙️ icon above to enter your free Google Gemini API key to begin.
+      </div>
+    </div>
+  </main>
+
+  <!-- Input Area -->
+  <footer class="p-3 bg-slate-800/90 border-t border-slate-700">
+    <form id="chat-form" class="flex items-center gap-2 max-w-3xl mx-auto">
+      <input 
+        id="user-input" 
+        type="text" 
+        placeholder="Ask anything in English or தமிழ்..." 
+        autocomplete="off"
+        class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-slate-400"
+      />
+      <button 
+        type="submit" 
+        id="send-btn"
+        class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white px-4 py-3 rounded-xl font-medium text-sm transition-all shadow-md shadow-indigo-600/30 flex items-center justify-center">
+        Send
+      </button>
+    </form>
+  </footer>
+
+  <!-- API Key Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 w-full max-w-sm shadow-2xl">
+      <h3 class="text-base font-bold text-white mb-2">Set Google Gemini API Key</h3>
+      <p class="text-xs text-slate-400 mb-3 leading-relaxed">
+        Key is stored only in your phone's browser local storage, never shared.
+      </p>
+      <input 
+        id="api-key-input" 
+        type="password" 
+        placeholder="Paste AI Studio API Key (AIzaSy...)" 
+        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+      />
+      <div class="flex justify-end gap-2">
+        <button id="close-modal-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-700">Cancel</button>
+        <button id="save-key-btn" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white">Save Key</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
