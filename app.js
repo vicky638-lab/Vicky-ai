@@ -104,7 +104,7 @@ chatForm.onsubmit = async (e) => {
       conversationHistory.push({ role: "model", parts: [{ text: reply }] });
       appendMessage("assistant", reply);
     } else {
-      appendMessage("assistant", "⚠️ Error: Please verify that your API key is correct in Settings.");
+      appendMessage("assistant", "⚠️ " + (data.error ? data.error.message : JSON.stringify(data)));
     }
   } catch (err) {
     loadingWrapper.remove();
