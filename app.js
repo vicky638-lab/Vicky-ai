@@ -61,24 +61,37 @@ function appendMessage(role, text, imageUrl) {
   return bubble;
 }
 
-// ---------- 📎 Screenshot + 🎤 Voice buttons ----------
+// ---------- கிளிப் + மைக் buttons (classic line icons) ----------
+const ICON_COLOR = "#94a3b8";
+
+const CLIP_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
+
+const MIC_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
+
 const fileInput = document.createElement("input");
 fileInput.type = "file";
 fileInput.accept = "image/*";
 fileInput.style.display = "none";
 document.body.appendChild(fileInput);
 
-function makeBtn(label) {
+function makeBtn(svg, label) {
   const b = document.createElement("button");
   b.type = "button";
-  b.textContent = label;
-  b.style.cssText = "font-size:22px;padding:0 8px;background:transparent;border:0;cursor:pointer;color:inherit;";
+  b.innerHTML = svg;
+  b.setAttribute("aria-label", label);
+  b.style.cssText = `display:flex;align-items:center;justify-content:center;padding:0 10px;background:transparent;border:0;cursor:pointer;color:${ICON_COLOR};`;
   return b;
 }
-const attachBtn = makeBtn("📎");
-const micBtn = makeBtn("🎤");
+const attachBtn = makeBtn(CLIP_SVG, "Add screenshot");
+const micBtn = makeBtn(MIC_SVG, "Voice input");
 sendBtn.parentNode.insertBefore(micBtn, sendBtn);
 sendBtn.parentNode.insertBefore(attachBtn, micBtn);
+
+// screenshot எங்கே சேர்ப்பது என்ற குறிப்பு
+const hintBar = document.createElement("div");
+hintBar.textContent = "Screenshot உள்ளதா? கீழே உள்ள கிளிப் icon தொட்டு சேர்க்கவும்.";
+hintBar.style.cssText = "font-size:12px;color:#94a3b8;padding:6px 14px 0;";
+chatForm.parentNode.insertBefore(hintBar, chatForm);
 
 const previewBar = document.createElement("div");
 previewBar.style.cssText = "display:none;align-items:center;padding:6px 12px;";
@@ -88,10 +101,12 @@ function showPreview() {
   if (!pendingImage) {
     previewBar.style.display = "none";
     previewBar.innerHTML = "";
+    hintBar.style.display = "block";
     return;
   }
+  hintBar.style.display = "none";
   previewBar.style.display = "flex";
-  previewBar.innerHTML = `<img src="${pendingImage.preview}" style="height:56px;border-radius:8px;margin-right:10px"><button type="button" id="rm-img" style="font-size:18px;background:transparent;border:0;color:inherit;cursor:pointer">✖</button>`;
+  previewBar.innerHTML = `<img src="${pendingImage.preview}" style="height:56px;border-radius:8px;margin-right:10px"><span style="font-size:12px;color:#94a3b8;flex:1">படம் சேர்ந்தது. Send தொடவும்.</span><button type="button" id="rm-img" style="font-size:18px;background:transparent;border:0;color:#94a3b8;cursor:pointer">✕</button>`;
   document.getElementById("rm-img").onclick = () => {
     pendingImage = null;
     showPreview();
@@ -127,6 +142,11 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recog = null;
 let recognizing = false;
 
+function micIdle() {
+  recognizing = false;
+  micBtn.style.color = ICON_COLOR;
+}
+
 micBtn.onclick = () => {
   if (!SR) {
     alert("இந்த browser-ல் voice வசதி இல்லை. Chrome பயன்படுத்தவும்.");
@@ -143,21 +163,15 @@ micBtn.onclick = () => {
   const base = userInput.value;
   recog.onstart = () => {
     recognizing = true;
-    micBtn.textContent = "🔴";
+    micBtn.style.color = "#ef4444";
   };
   recog.onresult = (e) => {
     let t = "";
     for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
     userInput.value = (base ? base + " " : "") + t;
   };
-  recog.onend = () => {
-    recognizing = false;
-    micBtn.textContent = "🎤";
-  };
-  recog.onerror = () => {
-    recognizing = false;
-    micBtn.textContent = "🎤";
-  };
+  recog.onend = micIdle;
+  recog.onerror = micIdle;
   recog.start();
 };
 
@@ -232,7 +246,7 @@ chatForm.onsubmit = async (e) => {
   pendingImage = null;
   showPreview();
 
-  appendMessage("user", message || "📷 Screenshot", img && img.preview);
+  appendMessage("user", message || "Screenshot", img && img.preview);
   userInput.value = "";
   sendBtn.disabled = true;
 
@@ -285,7 +299,6 @@ chatForm.onsubmit = async (e) => {
   loadingWrapper.remove();
 
   if (reply) {
-    // படத்தை history-ல் இருந்து நீக்கி, அடுத்த கேள்விகள் வேகமாக இருக்கும்
     conversationHistory[userIndex] = {
       role: "user",
       parts: [{ text: text + (img ? " [screenshot sent]" : "") }],
