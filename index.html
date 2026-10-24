@@ -1,85 +1,281 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ta">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vicky AI</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f172a">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Markdown parser for clean AI responses -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vicky AI</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+:root{--bg:#fff;--soft:#f3f4fb;--line:#e6e8f0;--text:#1c1f2e;--mute:#6b7186;--b1:#5b4df0;--b2:#9b5cf6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Tamil","Segoe UI",Roboto,sans-serif}
+button{font-family:inherit;cursor:pointer;color:inherit}
+textarea,input{font-family:inherit}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:860px;margin:0 auto}
+header{display:flex;align-items:center;gap:4px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.ib{display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:0;padding:8px;border-radius:10px;color:var(--mute)}
+.ib:active{background:var(--soft)}
+.brand{display:flex;align-items:center;gap:8px;font-size:17px;margin-left:4px}
+.logo{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-weight:700}
+main{flex:1;overflow-y:auto;overscroll-behavior:contain}
+#welcome{display:flex;flex-direction:column;align-items:center;text-align:center;padding:48px 20px 20px;animation:fadeUp .6s}
+.logo.big{width:84px;height:84px;font-size:42px;border-radius:26px;box-shadow:0 12px 36px rgba(91,77,240,.35);animation:float 3s ease-in-out infinite}
+#welcome h1{font-size:28px;margin:22px 0 6px;background:linear-gradient(135deg,var(--b1),var(--b2));-webkit-background-clip:text;background-clip:text;color:transparent}
+#welcome p{margin:0;color:var(--mute);font-size:17px;line-height:1.6}
+.sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:26px}
+.sug{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-size:14px}
+.sug:active{background:var(--soft)}
+.tip{margin-top:22px;font-size:13px;color:var(--mute);line-height:1.8;max-width:420px}
+#chat{display:none;padding:10px 12px}
+.msg{display:flex;gap:10px;margin:14px 0;animation:fadeUp .25s}
+.msg.user{justify-content:flex-end}
+.ubub{background:var(--soft);padding:10px 14px;border-radius:18px 18px 4px 18px;max-width:85%;white-space:pre-wrap;overflow-wrap:anywhere}
+.thumb{display:block;max-width:100%;max-height:220px;border-radius:10px;margin-top:8px}
+.av{flex:none;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+.abody{flex:1;min-width:0}
+.card{border:1px solid var(--line);border-radius:4px 18px 18px 18px;padding:12px 15px;line-height:1.7;overflow-wrap:anywhere;font-size:15.5px}
+.card p{margin:0 0 .7em}.card p:last-child{margin:0}
+.card pre{overflow:auto;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:12px;font-size:13px}
+.card code{background:var(--soft);padding:1px 5px;border-radius:5px;font-size:.92em}
+.card pre code{background:none;padding:0}
+.card img.gen{display:block;max-width:100%;border-radius:12px}
+.card table{border-collapse:collapse;display:block;overflow:auto}
+.card td,.card th{border:1px solid var(--line);padding:5px 9px}
+.acts{display:flex;gap:2px;margin-top:4px}
+.acts .ib{padding:7px}
+.acts .ib.on{color:var(--b1);background:var(--soft)}
+.dots span{display:inline-block;width:8px;height:8px;margin:3px;border-radius:50%;background:var(--b1);animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.15s}
+.dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes float{50%{transform:translateY(-8px)}}
+footer{padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+#preview{display:none;align-items:center;gap:10px;padding:4px 4px 8px;font-size:13px;color:var(--mute)}
+#preview img{height:52px;border-radius:8px}
+.box{border:1.5px solid var(--line);border-radius:22px;padding:8px 10px 6px;background:#fff;box-shadow:0 4px 18px rgba(30,30,60,.06)}
+.box:focus-within{border-color:var(--b1)}
+#input{width:100%;border:0;outline:0;resize:none;font-size:16px;line-height:1.5;max-height:160px;padding:4px 6px;background:transparent;color:var(--text)}
+.row{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 9px}
+.chip.on{background:var(--soft);color:var(--b1)}
+.send{margin-left:auto;width:42px;height:42px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;display:flex;align-items:center;justify-content:center}
+.send:disabled{opacity:.5}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:20}
+#drawer{position:fixed;top:0;bottom:0;left:0;width:290px;max-width:84%;background:#fff;z-index:21;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column;padding:14px 12px;overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,.12)}
+#drawer.open{transform:none}
+.sec{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 6px;font-size:12px;color:var(--mute);letter-spacing:.05em}
+.it{display:flex;align-items:center;gap:4px;border-radius:10px}
+.it:active{background:var(--soft)}
+.it .lab{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:none;border:0;text-align:left;padding:9px 8px;font-size:14.5px}
+.it .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{border:0;border-radius:12px;padding:10px 16px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-size:14.5px}
+.btn.ghost{background:var(--soft);color:var(--text)}
+#projectView{display:none;padding:18px 16px}
+#projectView textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px;font-size:15px}
+.prow{display:flex;gap:8px;margin:10px 0 18px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:30;padding:20px}
+#modal .in{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:380px}
+#modal input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:15px;margin:10px 0 14px}
+</style>
 </head>
-<body class="bg-slate-900 text-slate-100 flex flex-col h-[100dvh] font-sans antialiased overflow-hidden">
-
-  <!-- Header -->
-  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <div class="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
-        V
-      </div>
-      <div>
-        <h1 class="text-base font-bold text-white leading-tight">Vicky AI <span class="text-xs text-indigo-400 font-normal">விக்கி</span></h1>
-        <p class="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online • Bilingual
-        </p>
-      </div>
-    </div>
-    <button id="settings-btn" class="text-slate-400 hover:text-white p-2 rounded-lg bg-slate-800 border border-slate-700 text-sm">
-      ⚙️ Key
-    </button>
+<body>
+<div id="app">
+  <header>
+    <button class="ib" id="menuBtn" data-ic="menu" aria-label="Menu"></button>
+    <div class="brand"><span class="logo">V</span><b>Vicky AI</b></div>
+    <span style="flex:1"></span>
+    <button class="ib" id="newBtn" data-ic="plus" aria-label="புதிய chat"></button>
   </header>
 
-  <!-- Chat History Screen -->
-  <main id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4">
-    <!-- Welcome message -->
-    <div class="flex gap-3">
-      <div class="w-7 h-7 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white">V</div>
-      <div class="bg-slate-800 border border-slate-700 rounded-2xl rounded-tl-sm p-3.5 max-w-[85%] text-sm leading-relaxed shadow-sm">
-        வணக்கம்! நான் <strong>Vicky AI</strong>. How can I help you today? Please tap the ⚙️ icon above to enter your free Google Gemini API key to begin.
-      </div>
-    </div>
+  <main id="main">
+    <section id="welcome">
+      <span class="logo big">V</span>
+      <h1>Welcome! வணக்கம்</h1>
+      <p>I am Vicky AI.<br>How can I help you today?</p>
+      <div class="sugs" id="sugs"></div>
+      <div class="tip">முதல் முறை: மேலே ☰ Menu → API Key-ல் உங்கள் Gemini key-ஐப் போடவும்.</div>
+    </section>
+    <section id="chat"></section>
+    <section id="projectView"></section>
   </main>
 
-  <!-- Input Area -->
-  <footer class="p-3 bg-slate-800/90 border-t border-slate-700">
-    <form id="chat-form" class="flex items-center gap-2 max-w-3xl mx-auto">
-      <input 
-        id="user-input" 
-        type="text" 
-        placeholder="Ask anything in English or தமிழ்..." 
-        autocomplete="off"
-        class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-slate-400"
-      />
-      <button 
-        type="submit" 
-        id="send-btn"
-        class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white px-4 py-3 rounded-xl font-medium text-sm transition-all shadow-md shadow-indigo-600/30 flex items-center justify-center">
-        Send
-      </button>
-    </form>
-  </footer>
-
-  <!-- API Key Modal -->
-  <div id="modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 w-full max-w-sm shadow-2xl">
-      <h3 class="text-base font-bold text-white mb-2">Set Google Gemini API Key</h3>
-      <p class="text-xs text-slate-400 mb-3 leading-relaxed">
-        Key is stored only in your phone's browser local storage, never shared.
-      </p>
-      <input 
-        id="api-key-input" 
-        type="password" 
-        placeholder="Paste AI Studio API Key (AIzaSy...)" 
-        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
-      />
-      <div class="flex justify-end gap-2">
-        <button id="close-modal-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-700">Cancel</button>
-        <button id="save-key-btn" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white">Save Key</button>
+  <footer>
+    <div id="preview"></div>
+    <div class="box">
+      <textarea id="input" rows="1" placeholder="கேள்வி எழுதுங்கள்... Ask anything"></textarea>
+      <div class="row">
+        <button type="button" class="ib chip" id="clipBtn"><span data-ic="clip" data-sz="20"></span>Screenshot</button>
+        <button type="button" class="ib chip" id="imgBtn"><span data-ic="image" data-sz="20"></span>படம் உருவாக்கு</button>
+        <button type="button" class="ib chip" id="micBtn"><span data-ic="mic" data-sz="20"></span>பேசு</button>
+        <button type="button" class="send" id="sendBtn" data-ic="send" data-sz="20" aria-label="Send"></button>
       </div>
     </div>
-  </div>
+  </footer>
+</div>
 
-  <script src="app.js"></script>
-</body>
-</html>
+<div id="scrim"></div>
+<aside id="drawer">
+  <div class="brand"><span class="logo">V</span><b>Vicky AI</b></div>
+  <button class="btn" id="dNew" style="margin-top:16px">+ புதிய chat</button>
+  <div class="sec"><span>PROJECTS</span><button class="ib" id="dProj" data-ic="plus" data-sz="18" aria-label="புதிய project"></button></div>
+  <div id="projList"></div>
+  <div class="sec"><span>CHATS</span></div>
+  <div id="chatList"></div>
+  <div style="flex:1;min-height:20px"></div>
+  <label class="it" style="padding:10px 8px;font-size:14px;gap:10px"><input type="checkbox" id="auto"> பதிலைத் தானாக வாசி</label>
+  <button class="ib" id="dKey" style="justify-content:flex-start;font-size:14.5px;color:var(--text)"><span data-ic="key" data-sz="20"></span>API Key</button>
+</aside>
+
+<div id="modal"><div class="in">
+  <b style="font-size:17px">Google Gemini API Key</b>
+  <div style="font-size:13px;color:var(--mute);margin-top:6px">இந்த key உங்கள் phone-ல் மட்டுமே சேமிக்கப்படும்.</div>
+  <input id="kIn" type="password" placeholder="Key-ஐ paste செய்யவும்">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" id="kCancel">Cancel</button><button class="btn" id="kSave">Save</button></div>
+</div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const P={
+menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+key:'<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+clip:'<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+mic:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+send:'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+speaker:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>',
+x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+};
+const ic=(n,s)=>'<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+P[n]+'</svg>';
+document.querySelectorAll('[data-ic]').forEach(e=>{e.innerHTML=ic(e.dataset.ic,e.dataset.sz||22)});
+
+const KEY='vicky_gemini_key';
+const MODELS=["gemini-flash-lite-latest","gemini-3.8-flash","gemini-flash-latest"];
+const SYSTEM=`You are Vicky AI (விக்கி ஏஐ), a friendly bilingual assistant for English and Tamil. Reply in the same language the user writes (Tamil script, English, or Tanglish). Give concise, helpful, well-formatted answers with markdown. When the user sends a screenshot, look at it carefully: say exactly what you see, where the problem is, and give clear numbered steps telling them where to tap (for example, if an icon is missing, suggest checking the three-dot menu). Ask for another screenshot if you need more detail.`;
+
+let db;try{db=JSON.parse(localStorage.getItem('vicky_data'))}catch(e){}
+if(!db||!db.chats)db={chats:[],projects:[],auto:false};
+db.cur=null;db.view='chat';db.proj=null;
+const save=()=>{try{localStorage.setItem('vicky_data',JSON.stringify(db,(k,v)=>k==='img'?undefined:v))}catch(e){}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md=t=>window.marked?marked.parse(t):esc(t).replace(/\n/g,'<br>');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const mk=(cls,html)=>{const d=document.createElement('div');d.className=cls;if(html)d.innerHTML=html;return d};
+
+const main=$('#main'),chat=$('#chat'),input=$('#input'),sendBtn=$('#sendBtn');
+let pending=null,busy=false,imageMode=false;
+const curChat=()=>db.chats.find(c=>c.id===db.cur);
+function scroll(force){if(force||main.scrollHeight-main.scrollTop-main.clientHeight<220)main.scrollTop=main.scrollHeight}
+function autosize(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,160)+'px'}
+
+/* ---------- messages ---------- */
+function actBtn(name,label,fn){const b=document.createElement('button');b.className='ib';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=ic(name,18);b.onclick=()=>fn(b);return b}
+function addUser(m){
+  const w=mk('msg user','<div class="ubub"></div>');const b=w.firstChild;
+  b.textContent=(m.hadImg&&!m.img?'[Screenshot] ':'')+m.t;
+  if(m.img){const im=new Image();im.src=m.img;im.className='thumb';b.appendChild(im)}
+  chat.appendChild(w);
+}
+function addAI(m){
+  const w=mk('msg ai','<span class="av">V</span><div class="abody"><div class="card"></div><div class="acts"></div></div>');
+  const card=w.querySelector('.card'),acts=w.querySelector('.acts');
+  const o={dots(){card.innerHTML='<span class="dots"><span></span><span></span><span></span></span>'},set(t){card.innerHTML=md(t);scroll()}};
+  if(m.loading)o.dots();
+  else if(m.gen){
+    card.innerHTML='<img class="gen" src="'+esc(m.gen)+'" alt="">';
+    acts.append(actBtn('download','Download',()=>dlImage(m.gen)),actBtn('share','Share',()=>shareText(m.gen)));
+  }else{
+    card.innerHTML=md(m.t);
+    if(!m.err)acts.append(actBtn('speaker','வாசி',b=>speak(m.t,b)),actBtn('copy','Copy',()=>copyText(m.t)),actBtn('download','Download',()=>dlText(m.t)),actBtn('share','Share',()=>shareText(m.t)));
+  }
+  chat.appendChild(w);scroll(true);return o;
+}
+function copyText(t){
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()});
+}
+function dlText(t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download='vicky-ai.txt';document.body.appendChild(a);a.click();a.remove()}
+async function dlImage(u){try{const r=await fetch(u);const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='vicky-ai.png';document.body.appendChild(a);a.click();a.remove()}catch(e){window.open(u,'_blank')}}
+function shareText(t){if(navigator.share)navigator.share({text:t}).catch(()=>{});else{copyText(t);alert('Copy ஆகிவிட்டது')}}
+let speakBtn=null;
+function speak(text,btn){
+  const s=window.speechSynthesis;if(!s){alert('இந்த browser-ல் வாசிக்கும் வசதி இல்லை');return}
+  const same=speakBtn===btn&&s.speaking;
+  s.cancel();if(speakBtn)speakBtn.classList.remove('on');speakBtn=null;
+  if(same)return;
+  const clean=text.replace(/```[\s\S]*?```/g,' ').replace(/[#*_`>~|\[\]]/g,' ').replace(/\s+/g,' ').trim();
+  const u=new SpeechSynthesisUtterance(clean);
+  u.lang=/[\u0B80-\u0BFF]/.test(clean)?'ta-IN':'en-US';
+  u.onend=u.onerror=()=>{if(btn)btn.classList.remove('on')};
+  if(btn){btn.classList.add('on');speakBtn=btn}
+  s.speak(u);
+}
+
+/* ---------- render ---------- */
+function render(){
+  const c=curChat();
+  const showChat=db.view==='chat'&&c&&c.msgs.length;
+  $('#welcome').style.display=(db.view==='chat'&&!showChat)?'flex':'none';
+  chat.style.display=showChat?'block':'none';
+  $('#projectView').style.display=db.view==='project'?'block':'none';
+  chat.innerHTML='';
+  if(showChat)c.msgs.forEach(m=>m.r==='user'?addUser(m):addAI(m));
+  if(db.view==='project')renderProject();
+  scroll(true);
+}
+function item(label,icon,go,del){
+  const d=mk('it');const b=document.createElement('button');b.className='lab';
+  b.innerHTML='<span style="color:var(--mute);display:flex">'+ic(icon,18)+'</span><span class="t"></span>';
+  b.querySelector('.t').textContent=label;b.onclick=go;d.append(b);
+  if(del){const x=document.createElement('button');x.className='ib';x.innerHTML=ic('trash',16);x.setAttribute('aria-label','Delete');x.onclick=e=>{e.stopPropagation();del()};d.append(x)}
+  return d;
+}
+function renderList(){
+  const C=$('#chatList');C.innerHTML='';
+  db.chats.filter(c=>!c.proj).slice(0,60).forEach(c=>C.append(item(c.title,'chat',()=>openChat(c.id),()=>delChat(c.id))));
+  const L=$('#projList');L.innerHTML='';
+  db.projects.forEach(p=>L.append(item(p.name,'folder',()=>openProject(p.id))));
+}
+const openDrawer=()=>{$('#drawer').classList.add('open');$('#scrim').style.display='block'};
+const closeDrawer=()=>{$('#drawer').classList.remove('open');$('#scrim').style.display='none'};
+function newChat(){db.cur=null;db.view='chat';db.proj=null;closeDrawer();render();renderList()}
+function openChat(id){db.cur=id;db.view='chat';closeDrawer();render()}
+function delChat(id){
+  if(!confirm('இந்த chat-ஐ நீக்கவா?'))return;
+  db.chats=db.chats.filter(c=>c.id!==id);if(db.cur===id)db.cur=null;save();render();renderList();
+}
+function newProject(){
+  const n=(prompt('Project பெயர்?')||'').trim();if(!n)return;
+  const p={id:uid(),name:n,ins:''};db.projects.unshift(p);save();openProject(p.id);
+}
+function openProject(id){db.proj=id;db.view='project';db.cur=null;closeDrawer();render();renderList()}
+function renderProject(){
+  const p=db.projects.find(x=>x.id===db.proj);
+  if(!p){newChat();return}
+  const v=$('#projectView');
+  v.innerHTML='<h2 style="margin:0 0 4px"></h2><p style="color:var(--mute);font-size:14px;margin:0 0 14px">Instructions: இந்த project-ல் Vicky AI எப்படிப் பதில் சொல்ல வேண்டும் என்று எழுதுங்கள்.</p><textarea id="pIns" rows="4"></textarea><div class="prow"><button class="btn" id="pSave">Save</button><button class="btn ghost" id="pDel">Project நீக்கு</button></div><b>Chats</b><div id="pChats" style="margin:6px 0"></div><p style="color:var(--mute);font-size:13px">கீழே கேள்வி எழுதினால் புதிய chat இந்த project-ல் உருவாகும்.</p>';
+  v.querySelector('h2').textContent=p.name;$('#pIns').value=p.ins||'';
+  $('#pSave').onclick=()=>{p.ins=$('#pIns').value;save();alert('Save ஆனது')};
+  $('#pDel').onclick=()=>{if(confirm('Project-ஐயும் அதன் chats-ஐயும் நீக்கவா?')){db.chats=db.chats.filter(c=>c.proj!==p.id);db.projects=db.projects.filter(x=>x.id!==p.id);save();newChat()}};
+  const L=$('#pChats');const cs=db.chats.filter(c=>c.proj===p.id);
+  if(!cs.length)L.textContent='இன்னும் chat இல்லை';
+  cs.forEach(c=>L.append(item(c.title,'chat',()=>openChat(c.id),()=>delChat(c.id))));
+}
+
+/* ---------- Gemini ---------- */
+async function stream(model,key,sys,contents,onChunk){
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':streamGenerateContent?alt=sse',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents})});
+  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}const e=new Error(m||'HTTP '+r.status);e.status=r.status;throw e}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',full='';
+  for(;;){
+    const {done,value}=await rd.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});const ls=buf.split('\n');buf=ls.pop();
+    for(const l of ls){
+      if(!l.startsW
