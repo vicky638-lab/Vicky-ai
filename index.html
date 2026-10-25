@@ -372,6 +372,31 @@ async function makeImage3(c,prompt,key,img){
   c.msgs.push({r:'ai',err:true,t:'Google-ன் image model உங்கள் free key-ல் கிடைக்கவில்லை ('+note.slice(0,90)+'). அதனால் இலவச முறையில் உருவாக்கப்பட்டது.'});
   await makeImage3(c,prompt,key,img);
 } 
+  function nowLine(){
+  const d=new Date();
+  return 'Today is '+d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' (current year '+d.getFullYear()+'). Your training knowledge may be outdated and the real date is later than your training data. Never tell the user it is an earlier year, and never say a version number or date from the user is impossible. For latest versions, news or prices: use search if available, otherwise say you cannot verify it and tell what you last knew.\n\n';
+}
+let useSearch=true;
+async function stream2(model,key,sys,contents,onChunk){
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':streamGenerateContent?alt=sse';
+  const body={systemInstruction:{parts:[{text:sys}]},contents};
+  if(useSearch)body.tools=[{google_search:{}}];
+  const go=()=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+  let r=await go();
+  if(!r.ok&&useSearch&&[400,403,429].includes(r.status)){useSearch=false;delete body.tools;r=await go()}
+  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}const e=new Error(m||'HTTP '+r.status);e.status=r.status;throw e}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',full='';
+  for(;;){
+    const {done,value}=await rd.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});const ls=buf.split('\n');buf=ls.pop();
+    for(const l of ls){
+      if(!l.startsWith('data:'))continue;const j=l.slice(5).trim();if(!j)continue;
+      try{const d=JSON.parse(j);const ps=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];
+        for(const p of ps)if(p.text&&!p.thought){full+=p.text;onChunk(full)}}catch(e){}
+    }
+  }
+  return full;
+}
   /* ---------- send ---------- */
 async function send(){
   if(busy)return;
