@@ -299,11 +299,11 @@ function hist(c,img){
 }
 async function chatReply(c,img,key){
   const p=c.proj&&db.projects.find(x=>x.id===c.proj);
-  const sys=SYSTEM+(p&&p.ins?'\n\nProject "'+p.name+'" instructions:\n'+p.ins:'');
+  const sys=nowLine()+SYSTEM+(p&&p.ins?'\n\nProject "'+p.name+'" instructions:\n'+p.ins:'');
   const contents=hist(c,img);const o=addAI({loading:true});
   let reply='',bad=false;
   outer:for(const m of MODELS){for(let a=0;a<3;a++){
-    try{reply=await stream(m,key,sys,contents,t=>o.set(t));if(reply)break outer;throw new Error('empty')}
+    try{reply=await stream2(m,key,sys,contents,t=>o.set(t));if(reply)break outer;throw new Error('empty')}
     catch(e){o.dots();
       if(e.status===401||e.status===403||/api key/i.test(e.message)){bad=true;break outer}
       if(e.status===404)break;
