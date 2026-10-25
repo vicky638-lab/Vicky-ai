@@ -331,7 +331,7 @@ async function send(){
   if(!key){openKey();return}
   const text=input.value.trim();
   if(!text&&!pending)return;
-  busy=true;sendBtn.disabled=true;
+  busy=true;sendBtn.disabled=true;if(recog){recog.onresult=null;recog.onend=null;try{recog.abort()}catch(e){}micIdle()}
   let c=curChat();
   if(!c){c={id:uid(),title:(text||'Screenshot').slice(0,40),proj:db.view==='project'?db.proj:null,msgs:[]};db.chats.unshift(c);db.cur=c.id}
   db.view='chat';
