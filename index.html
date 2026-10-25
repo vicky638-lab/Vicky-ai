@@ -163,7 +163,7 @@ const SYSTEM=`You are Vicky AI (விக்கி ஏஐ), a friendly bilingual
 let db;try{db=JSON.parse(localStorage.getItem('vicky_data'))}catch(e){}
 if(!db||!db.chats)db={chats:[],projects:[],auto:false};
 db.cur=null;db.view='chat';db.proj=null;
-const save=()=>{try{localStorage.setItem('vicky_data',JSON.stringify(db,(k,v)=>k==='img'?undefined:v))}catch(e){}};
+const save=()=>{try{localStorage.setItem('vicky_data',JSON.stringify(db,(k,v)=>(k==='img'||(k==='gen'&&typeof v==='string'&&v.startsWith('data:')))?undefined:v))}catch(e){}};()=>{try{localStorage.setItem('vicky_data',JSON.stringify(db,(k,v)=>k==='img'?undefined:v))}catch(e){}};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const md=t=>window.marked?marked.parse(t):esc(t).replace(/\n/g,'<br>');
@@ -324,7 +324,55 @@ async function makeImage(c,prompt,key){
   const ok=await new Promise(res=>{const im=new Image();im.onload=()=>res(true);im.onerror=()=>res(false);im.src=url;setTimeout(()=>res(false),90000)});
   c.msgs.push(ok?{r:'ai',t:prompt,gen:url}:{r:'ai',err:true,t:'படம் உருவாக்க முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'});
   setImageMode(false);
-}/* ---------- send ---------- */
+} 
+ async function toEnglish2(text,key,img){
+  const parts=[];
+  if(img)parts.push({inlineData:{mimeType:img.mimeType,data:img.data}});
+  parts.push({text:img
+    ?'Look at the attached photo. Write one detailed English prompt for an image generator that fulfils the user request below, keeping the same hairstyle and hair colour, skin tone, facial hair, outfit and its colours, and accessories as in the photo. Do not name or identify anyone. User request: '+text+'\nOutput only the prompt.'
+    :'Rewrite this as one short, vivid English image-generation prompt. Output only the prompt:\n'+text});
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[0]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts}]})});
+  const d=await r.json();
+  return d.candidates[0].content.parts.map(p=>p.text||'').join('').trim();
+}
+async function makeImage2(c,prompt,key,img){
+  addAI({loading:true});
+  let p=prompt;
+  try{p=(await toEnglish2(prompt,key,img))||p}catch(e){}
+  p=p.slice(0,700);
+  const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=768&height=768&nologo=true&seed='+Math.floor(Math.random()*1e6);
+  const ok=await new Promise(res=>{const im=new Image();im.onload=()=>res(true);im.onerror=()=>res(false);im.src=url;setTimeout(()=>res(false),90000)});
+  c.msgs.push(ok?{r:'ai',t:prompt,gen:url}:{r:'ai',err:true,t:'படம் உருவாக்க முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'});
+  setImageMode(false);
+}
+async function geminiImage(key,prompt,img){
+  const parts=[];
+  if(img)parts.push({inlineData:{mimeType:img.mimeType,data:img.data}});
+  parts.push({text:img?'Edit the attached photo as requested. Keep the same face, hairstyle, skin tone and outfit recognisable. Request: '+prompt:prompt});
+  let lastErr='';
+  for(const m of ['gemini-3.1-flash-image','gemini-3.1-flash-image-preview','gemini-2.5-flash-image']){
+    try{
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseModalities:['TEXT','IMAGE']}})});
+      const d=await r.json();
+      if(!r.ok){lastErr=(d.error&&d.error.message)||('HTTP '+r.status);if(r.status===404)continue;throw new Error(lastErr)}
+      const ps=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];
+      const im=ps.find(p=>p.inlineData||p.inline_data);
+      if(im){const x=im.inlineData||im.inline_data;return 'data:'+(x.mimeType||x.mime_type||'image/png')+';base64,'+x.data}
+      lastErr='no image returned';
+    }catch(e){lastErr=e.message;break}
+  }
+  throw new Error(lastErr||'failed');
+}
+async function makeImage3(c,prompt,key,img){
+  addAI({loading:true});
+  let url=null,note='';
+  try{url=await geminiImage(key,prompt,img)}catch(e){note=e.message}
+  if(url){c.msgs.push({r:'ai',t:'[படம்] '+prompt,gen:url});setImageMode(false);return}
+  chat.lastElementChild.remove();
+  c.msgs.push({r:'ai',err:true,t:'Google-ன் image model உங்கள் free key-ல் கிடைக்கவில்லை ('+note.slice(0,90)+'). அதனால் இலவச முறையில் உருவாக்கப்பட்டது.'});
+  await makeImage3(c,prompt,key,img);
+} 
+  /* ---------- send ---------- */
 async function send(){
   if(busy)return;
   const key=localStorage.getItem(KEY);
