@@ -221,5 +221,133 @@ async function puterImage(prompt,att,hd){
   }
   throw new Error(last);
 }
-async function toEnglish(text){
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[0]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':localStorage.getItem(KEY)},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Rewrite as one detailed English image prompt. Output only the pro
+async function toEnglish(text){  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[0]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':localStorage.getItem(KEY)},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Rewrite as one detailed English image prompt. Output only the prompt:\n'+text}]}]})});
+  const d=await r.json();return d.candidates[0].content.parts.map(p=>p.text||'').join('').trim();
+}
+async function makeImage(c,prompt,atts){
+  const bl=quotaCheck();if(bl){c.msgs.push({r:'ai',err:true,t:bl});return}
+  addAI({loading:true});
+  const att=atts.find(a=>a.data&&a.mimeType.startsWith('image/'));
+  const full=(mode?mode.prefix:'')+(att?'Edit the attached photo as requested. Keep the same face, hairstyle, skin tone and outfit recognisable. Request: ':'')+prompt+'. Sharp, clean, high resolution, no pixelation.';
+  let src='',err='';
+  if(window.puter){try{src=await puterImage(full,att,S.hd)}catch(e){err=(e&&e.message)||String(e)}}else err='Puter load ஆகவில்லை';
+  if(src){quotaUse();c.msgs.push({r:'ai',t:'[படம்] '+prompt,gen:src});setMode(null);return}
+  c.msgs.push({r:'ai',err:true,t:'Puter மூலம் முடியவில்லை ('+err.slice(0,80)+'). இலவச மாற்று முறை முயற்சிக்கப்படுகிறது.'});
+  let p=full;try{p=await toEnglish(full)}catch(e){}
+  const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p.slice(0,700))+'?width=768&height=768&nologo=true&seed='+Math.floor(Math.random()*1e6);
+  const ok=await new Promise(res=>{const im=new Image();im.onload=()=>res(true);im.onerror=()=>res(false);im.src=url;setTimeout(()=>res(false),90000)});
+  c.msgs.push(ok?{r:'ai',t:'[படம்] '+prompt,gen:url}:{r:'ai',err:true,t:'படம் உருவாக்க முடியவில்லை. சிறிது நேரம் கழித்து முயற்சிக்கவும்.'});
+  if(ok)setMode(null);
+}
+
+/* ---------- video ---------- */
+$('#vGo').onclick=async()=>{
+  const p=$('#vPrompt').value.trim(),out=$('#vOut');if(!p)return;
+  if(!window.puter){out.textContent='Puter load ஆகவில்லை. Page-ஐ refresh செய்யவும்.';return}
+  out.innerHTML='<span class="dots"><span></span><span></span><span></span></span> வீடியோ உருவாகிறது... (1-3 நிமிடம் ஆகலாம்)';
+  try{
+    const v=await (($('#vTest').checked)?puter.ai.txt2vid(p,true):puter.ai.txt2vid(p,{model:$('#vModel').value}));
+    out.innerHTML='';v.controls=true;v.style.maxWidth='100%';v.style.borderRadius='14px';out.append(v);
+    const b=document.createElement('button');b.className='btn g';b.style.marginTop='10px';b.textContent='Download';b.onclick=()=>dlImage(v.src,'vicky-video.mp4');out.append(b);
+  }catch(e){out.textContent='முடியவில்லை: '+((e&&(e.message||(e.error&&e.error.message)))||JSON.stringify(e)).slice(0,200)}
+};
+/* ---------- attachments ---------- */
+const fileIn=document.createElement('input');fileIn.type='file';fileIn.style.display='none';document.body.appendChild(fileIn);
+const readURL=f=>new Promise(r=>{const d=new FileReader();d.onload=()=>r(d.result);d.readAsDataURL(f)});
+async function readImg(f){
+  const u=await readURL(f);
+  return new Promise(r=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1280/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*s);cv.height=Math.round(im.height*s);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);const x=cv.toDataURL('image/jpeg',.82);r({mimeType:'image/jpeg',data:x.split(',')[1],preview:x})};im.src=u});
+}
+async function addFiles(fs){
+  for(const f of fs){
+    if(pending.length>=4)break;
+    if(f.type.startsWith('image/'))pending.push(await readImg(f));
+    else if(f.type==='application/pdf'){const u=await readURL(f);pending.push({mimeType:'application/pdf',data:u.split(',')[1],name:f.name})}
+    else pending.push({text:'['+f.name+']\n'+(await f.text()).slice(0,20000),name:f.name});
+  }
+  showPreview();
+}
+function showPreview(){
+  const p=$('#preview');p.innerHTML='';p.style.display=pending.length?'flex':'none';
+  pending.forEach((a,i)=>{const d=mk('pv');d.innerHTML=a.preview?'<img src="'+a.preview+'">':'<div style="padding:18px 12px;background:var(--soft);border-radius:10px;font-size:.8em">'+esc(a.name||'file')+'</div>';const x=document.createElement('button');x.textContent='×';x.onclick=()=>{pending.splice(i,1);showPreview()};d.append(x);p.append(d)});
+}
+function pick(acc,cam,multi){fileIn.accept=acc;fileIn.multiple=multi;if(cam)fileIn.setAttribute('capture','environment');else fileIn.removeAttribute('capture');fileIn.click()}
+fileIn.onchange=()=>{addFiles([...fileIn.files]);fileIn.value=''};
+$('#plusBtn').onclick=()=>{
+  const pop=$('#plusPop');pop.innerHTML='';
+  [['image','Photos',()=>pick('image/*',false,true)],['camera','Camera',()=>pick('image/*',true,false)],['file','Files (PDF / text)',()=>pick('application/pdf,text/*,.md,.csv,.json',false,true)],['smile','Create image',()=>{setMode({name:'AI image',prefix:''});input.focus()}]]
+  .forEach(([i,l,f])=>{const b=document.createElement('button');b.innerHTML=ic(i,20)+'<span>'+l+'</span>';b.onclick=()=>{closeAll();f()};pop.append(b)});
+  const r=$('#plusBtn').getBoundingClientRect();pop.style.left=Math.max(8,r.left)+'px';pop.style.bottom=(innerHeight-r.top+8)+'px';pop.style.display='block';$('#scrim').style.display='block';
+};
+
+/* ---------- send ---------- */
+async function send(){
+  if(busy)return;
+  const text=input.value.trim();
+  if(!text&&!pending.length)return;
+  if(!localStorage.getItem(KEY)&&!mode){openSettings();return}
+  if(recog){recog.onresult=null;recog.onend=null;try{recog.abort()}catch(e){}micOff()}
+  busy=true;sendBtn.disabled=true;
+  const c=ensureChat(text);
+  const atts=pending.filter(a=>a.data||a.text);pending=[];showPreview();
+  const um={r:'user',t:text||'இந்த screenshot-ல் என்ன பிரச்சினை? நான் எங்கே என்ன செய்ய வேண்டும்?',imgs:atts.map(a=>a.preview).filter(Boolean),nimg:atts.length,atts};
+  c.msgs.push(um);input.value='';autosize();save();render();renderList();
+  try{if(mode)await makeImage(c,um.t,atts);else await chatReply(c)}catch(e){}
+  save();render();renderList();busy=false;sendBtn.disabled=false;
+}
+sendBtn.onclick=send;
+input.addEventListener('input',autosize);
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!matchMedia('(pointer:coarse)').matches){e.preventDefault();send()}});
+  /* ---------- mic (speech to text) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recog=null,rec=false;
+function micOff(){rec=false;$('#micBtn').style.color=''}
+$('#micBtn').onclick=()=>{
+  if(!SR){alert('Chrome-ல் மட்டுமே voice வசதி');return}
+  if(rec){recog.stop();return}
+  recog=new SR();recog.lang='ta-IN';recog.interimResults=true;recog.continuous=true;
+  const base=input.value;
+  recog.onstart=()=>{rec=true;$('#micBtn').style.color='#ef4444'};
+  recog.onresult=e=>{let f='',t='';for(let i=0;i<e.results.length;i++){if(e.results[i].isFinal)f+=e.results[i][0].transcript;else t+=e.results[i][0].transcript}input.value=(base?base+' ':'')+f+t;autosize()};
+  recog.onend=micOff;recog.onerror=micOff;recog.start();
+};
+
+/* ---------- live voice ---------- */
+let liveOn=false,lr=null;
+const orb=(c,t)=>{$('#orb').className=c;$('#liveTxt').textContent=t||''};
+function liveListen(){
+  if(!liveOn)return;orb('listen','Listening...');
+  let txt='';lr=new SR();lr.lang='ta-IN';lr.interimResults=true;lr.continuous=false;
+  lr.onresult=e=>{txt='';for(let i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;$('#liveTxt').textContent=txt};
+  lr.onend=()=>{if(!liveOn)return;if(txt.trim())liveAsk(txt.trim());else setTimeout(liveListen,300)};
+  lr.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){liveOn=false;$('#live').style.display='none';alert('Mic permission கொடுக்கவும்')}};
+  try{lr.start()}catch(e){}
+}
+async function liveAsk(text){
+  orb('think','Thinking...');
+  const c=ensureChat(text);c.msgs.push({r:'user',t:text});
+  const {reply}=await gen(c,'\nThis is a live voice call: answer in at most 3 short sentences.');
+  if(!liveOn)return;
+  const out=reply||'மன்னிக்கவும், இப்போது பதில் சொல்ல முடியவில்லை.';
+  c.msgs.push({r:'ai',t:out});save();
+  orb('speak',out);await say(out);liveListen();
+}
+$('#liveBtn').onclick=()=>{
+  if(!SR){alert('Chrome-ல் மட்டுமே live voice');return}
+  if(!localStorage.getItem(KEY)){openSettings();return}
+  liveOn=true;$('#live').style.display='flex';liveListen();
+};
+$('#liveEnd').onclick=()=>{liveOn=false;try{lr.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}$('#live').style.display='none';render();renderList()};
+
+/* ---------- wiring ---------- */
+$('#menuBtn').onclick=()=>{$('#drawer').classList.add('open');$('#scrim').style.display='block'};
+$('#scrim').onclick=closeAll;
+$('#newBtn').onclick=newChat;
+$('#profBtn').onclick=openSettings;
+[['Python கற்றுக்கொடு',()=>{input.value='Python-ஐ ஆரம்பத்திலிருந்து எளிமையாகக் கற்றுக்கொடு';input.focus();autosize()}],
+ ['ஒரு படம் உருவாக்கு',()=>{setMode({name:'AI image',prefix:''});input.focus()}],
+ ['படிக்க உதவு',()=>{input.value='நான் படிக்கும் பாடத்தை எளிமையாகப் புரிய வை: ';input.focus();autosize()}],
+ ['Photo-வை 3D ஆக்கு',()=>{setMode({name:'3D avatar',prefix:TOOLS[2][2]});pick('image/*',false,false)}]
+].forEach(([t,f])=>{const b=document.createElement('button');b.className='sug';b.textContent=t;b.onclick=f;$('#sugs').append(b)});
+window.addEventListener('error',e=>{const b=document.createElement('div');b.style.cssText='position:fixed;top:0;left:0;right:0;background:#fee2e2;color:#991b1b;padding:8px;font-size:12px;z-index:99';b.textContent='Error: '+e.message;document.body.appendChild(b)});
+icons();applySet();renderTools();renderList();render();
