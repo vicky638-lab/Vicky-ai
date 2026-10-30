@@ -1,317 +1,225 @@
-const chatBox = document.getElementById("chat-box");
-const chatForm = document.getElementById("chat-form");
-const userInput = document.getElementById("user-input");
-const sendBtn = document.getElementById("send-btn");
-const modal = document.getElementById("modal");
-const settingsBtn = document.getElementById("settings-btn");
-const closeModalBtn = document.getElementById("close-modal-btn");
-const saveKeyBtn = document.getElementById("save-key-btn");
-const apiKeyInput = document.getElementById("api-key-input");
-
-let conversationHistory = [];
-let pendingImage = null;
-
-const SYSTEM_PROMPT = `You are Vicky AI (விக்கி ஏஐ), a friendly bilingual assistant for English and Tamil. Reply in the same language the user writes (Tamil script, English, or Tanglish). Give concise, helpful, well-formatted answers with markdown. When the user sends a screenshot, look at it carefully: say exactly what you see, where the problem is, and give clear numbered steps telling them where to tap (for example, if an icon is missing, suggest checking the three-dot menu). Ask for another screenshot if you need more detail.`;
-
-const MODELS = ["gemini-flash-lite-latest", "gemini-3.8-flash", "gemini-flash-latest"];
-
-settingsBtn.onclick = () => {
-  apiKeyInput.value = localStorage.getItem("vicky_gemini_key") || "";
-  modal.classList.remove("hidden");
+const $=s=>document.querySelector(s);
+const KEY='vicky_gemini_key';
+const MODELS=["gemini-flash-lite-latest","gemini-3.8-flash","gemini-flash-latest"];
+const DAILY_MAX=10,COOLDOWN_MIN=0; // அரை மணி இடைவெளி வேண்டுமெனில் 30
+const SYSTEM=`You are Vicky AI (விக்கி ஏஐ), a friendly assistant for English and Tamil. Reply in the language the user writes (Tamil script, English or Tanglish). Keep answers short, clear and truthful. If you are not sure, say so instead of guessing, and never invent facts, numbers or links. Use markdown only when it helps. If the user asks for something illegal or harmful, politely decline in one or two sentences and, if possible, offer a safe, legal alternative. When the user sends a screenshot, say exactly what you see and give numbered steps telling where to tap.`;
+const FONTS={serif:"'Noto Serif Tamil',Georgia,serif",sans:"system-ui,-apple-system,'Noto Sans Tamil',Roboto,sans-serif",round:"'Nunito','Noto Sans Tamil',system-ui,sans-serif",mono:"ui-monospace,Menlo,monospace"};
+const TOOLS=[
+ ['smile','Cartoon image','Cartoon illustration, vibrant colours, clean bold outlines. '],
+ ['grid','Pixel art','Pixel art, crisp pixels, limited palette, retro game style. '],
+ ['box','3D avatar','High-quality 3D rendered character, Pixar/Roblox style, soft studio lighting. '],
+ ['image','AI image',''],
+ ['video','Video generator',null]
+];
+const P={
+menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+mic:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>',
+send:'<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>',
+speaker:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+file:'<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>',
+video:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+smile:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+box:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>'
 };
-closeModalBtn.onclick = () => modal.classList.add("hidden");
+const ic=(n,s)=>'<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+P[n]+'</svg>';
+const icons=r=>(r||document).querySelectorAll('[data-ic]').forEach(e=>{e.innerHTML=ic(e.dataset.ic,e.dataset.sz||22)});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md=t=>window.marked?marked.parse(t):esc(t).replace(/\n/g,'<br>');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const mk=(cls,html)=>{const d=document.createElement('div');d.className=cls;if(html)d.innerHTML=html;return d};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const plain=t=>t.replace(/```[\s\S]*?```/g,' ').replace(/[#*_`>~|\[\]]/g,' ').replace(/\s+/g,' ').trim();
 
-saveKeyBtn.onclick = () => {
-  const key = apiKeyInput.value.trim();
-  if (key) {
-    localStorage.setItem("vicky_gemini_key", key);
-    modal.classList.add("hidden");
-    alert("API Key saved successfully!");
-  }
-};
+/* ---------- state ---------- */
+let S;try{S=JSON.parse(localStorage.getItem('vicky_set'))}catch(e){}
+S=Object.assign({font:'serif',size:16,ac:'#5b4df0',dark:false,wide:false,hd:false,auto:false,name:'Guest'},S||{});
+let db;try{db=JSON.parse(localStorage.getItem('vicky_data'))}catch(e){}
+if(!db||!db.chats)db={chats:[]};
+db.cur=null;db.view='chat';
+const save=()=>{try{localStorage.setItem('vicky_data',JSON.stringify(db,(k,v)=>(k==='img'||k==='imgs'||k==='atts'||(k==='gen'&&typeof v==='string'&&/^(data|blob):/.test(v)))?undefined:v))}catch(e){}};
+function applySet(){
+  const r=document.documentElement;
+  r.style.setProperty('--ff',FONTS[S.font]||FONTS.serif);r.style.setProperty('--fs',S.size+'px');r.style.setProperty('--ac',S.ac);
+  r.classList.toggle('dark',S.dark);r.classList.toggle('wide',S.wide);
+  $('#pname').textContent=S.name;$('#ava').textContent=(S.name||'V')[0].toUpperCase();
+  try{localStorage.setItem('vicky_set',JSON.stringify(S))}catch(e){}
+}
+const main=$('#main'),chat=$('#chat'),input=$('#input'),sendBtn=$('#sendBtn');
+let pending=[],busy=false,mode=null;
+const curChat=()=>db.chats.find(c=>c.id===db.cur);
+function scroll(f){if(f||main.scrollHeight-main.scrollTop-main.clientHeight<220)main.scrollTop=main.scrollHeight}
+function autosize(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,160)+'px'}
+function ensureChat(t){let c=curChat();if(!c){c={id:uid(),title:(t||'Photo').slice(0,40),msgs:[]};db.chats.unshift(c);db.cur=c.id}db.view='chat';return c}
 
-function scrollToBottom() {
-  chatBox.scrollTop = chatBox.scrollHeight;
+/* ---------- helpers: copy / share / download / speak ---------- */
+function copyText(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()})}
+function dlText(t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download='vicky-ai.txt';document.body.appendChild(a);a.click();a.remove()}
+async function dlImage(u,name){try{const b=await (await fetch(u)).blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name||'vicky-ai.png';document.body.appendChild(a);a.click();a.remove()}catch(e){window.open(u,'_blank')}}
+function shareText(t){if(navigator.share)navigator.share({text:t}).catch(()=>{});else{copyText(t);alert('Copy ஆகிவிட்டது')}}
+async function shareFile(u){try{const b=await (await fetch(u)).blob();const f=new File([b],'vicky.'+(b.type.split('/')[1]||'png'),{type:b.type});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){}alert('முதலில் Download செய்து பகிரவும்')}
+let spBtn=null;
+function speak(text,btn){
+  const s=window.speechSynthesis;if(!s)return;
+  const same=btn&&spBtn===btn&&s.speaking;s.cancel();if(spBtn)spBtn.classList.remove('on');spBtn=null;if(same)return;
+  const p=plain(text),u=new SpeechSynthesisUtterance(p);u.lang=/[\u0B80-\u0BFF]/.test(p)?'ta-IN':'en-US';
+  u.onend=u.onerror=()=>{if(btn)btn.classList.remove('on')};
+  if(btn){btn.classList.add('on');spBtn=btn}
+  s.speak(u);
+}
+function say(text){return new Promise(res=>{const s=window.speechSynthesis;if(!s){res();return}s.cancel();const p=plain(text),u=new SpeechSynthesisUtterance(p);u.lang=/[\u0B80-\u0BFF]/.test(p)?'ta-IN':'en-US';u.onend=u.onerror=()=>res();s.speak(u)})}
+
+/* ---------- messages ---------- */
+function hold(el,fn){let t;const s=()=>{t=setTimeout(fn,500)},c=()=>clearTimeout(t);el.addEventListener('touchstart',s,{passive:true});['touchend','touchmove','touchcancel'].forEach(e=>el.addEventListener(e,c));el.addEventListener('contextmenu',e=>{e.preventDefault();fn()})}
+function actBtn(n,l,f){const b=document.createElement('button');b.className='ib';b.title=l;b.setAttribute('aria-label',l);b.innerHTML=ic(n,18);b.onclick=()=>f(b);return b}
+function addUser(m,i){
+  const w=mk('msg user','<div class="ubub"></div>'),b=w.firstChild;
+  b.textContent=(m.nimg&&!(m.imgs&&m.imgs.length)?'['+m.nimg+' attachment] ':'')+m.t;
+  (m.imgs||[]).forEach(u=>{const im=new Image();im.src=u;im.className='thumb';b.appendChild(im)});
+  hold(w,()=>openSheet('user',m,i));chat.appendChild(w);
+}
+function addAI(m,i){
+  const w=mk('msg ai','<div class="abody"></div><div class="acts"></div>'),body=w.firstChild,acts=w.lastChild;
+  const o={dots(){body.innerHTML='<span class="dots"><span></span><span></span><span></span></span>'},set(t){body.innerHTML=md(t);scroll()}};
+  if(m.loading)o.dots();
+  else if(m.gen){body.innerHTML='<img class="gen" src="'+esc(m.gen)+'" alt="">';acts.append(actBtn('download','Download',()=>dlImage(m.gen)),actBtn('share','Share',()=>shareFile(m.gen)))}
+  else{body.innerHTML=md(m.t);if(!m.err)acts.append(actBtn('speaker','Speak',b=>speak(m.t,b)),actBtn('copy','Copy',()=>copyText(m.t)),actBtn('download','Download',()=>dlText(m.t)),actBtn('share','Share',()=>shareText(m.t)))}
+  if(!m.loading)hold(body,()=>openSheet('ai',m,i));
+  chat.appendChild(w);scroll(true);return o;
+}
+function showSheet(){$('#sheet').style.display='block';$('#scrim').style.display='block'}
+function closeAll(){$('#sheet').style.display='none';$('#plusPop').style.display='none';$('#drawer').classList.remove('open');$('#scrim').style.display='none'}
+function openSheet(kind,m,i){
+  const s=$('#sheet'),o=[];
+  if(kind==='user')o.push(['edit','Edit',()=>editMsg(i)]);
+  if(m.t){o.push(['copy','Copy',()=>copyText(m.t)],['share','Share',()=>shareText(m.t)]);if(kind==='ai'&&!m.err)o.push(['speaker','Speak',()=>speak(m.t,null)],['download','Download',()=>dlText(m.t)])}
+  s.innerHTML='';o.forEach(([ik,l,f])=>{const b=document.createElement('button');b.className='o';b.innerHTML=ic(ik,20)+'<span>'+l+'</span>';b.onclick=()=>{closeAll();f()};s.append(b)});
+  showSheet();
+}
+function editMsg(i){const c=curChat();input.value=c.msgs[i].t;c.msgs.splice(i);save();render();autosize();input.focus()}
+function render(){
+  const c=curChat(),has=c&&c.msgs.length;
+  $('#vpage').style.display=db.view==='video'?'block':'none';
+  $('#welcome').style.display=(db.view==='chat'&&!has)?'flex':'none';
+  chat.style.display=(db.view==='chat'&&has)?'block':'none';
+  $('#ttl').textContent=db.view==='video'?'Video':'Vicky AI';
+  chat.innerHTML='';
+  if(db.view==='chat'&&has)c.msgs.forEach((m,i)=>m.r==='user'?addUser(m,i):addAI(m,i));
+  scroll(true);
 }
 
-function appendMessage(role, text, imageUrl) {
-  const msgWrapper = document.createElement("div");
-  msgWrapper.className = `flex gap-2.5 ${role === "user" ? "justify-end" : "justify-start"}`;
+/* ---------- drawer ---------- */
+function item(label,icon,go,del,badge){
+  const d=mk('it'),b=document.createElement('button');b.className='lab';
+  b.innerHTML=(icon?'<span style="color:var(--mute);display:flex">'+ic(icon,20)+'</span>':'')+'<span class="t"></span>'+(badge?'<span class="badge">'+badge+'</span>':'');
+  b.querySelector('.t').textContent=label;b.onclick=go;d.append(b);
+  if(del){const x=document.createElement('button');x.className='ib';x.innerHTML=ic('trash',16);x.onclick=e=>{e.stopPropagation();del()};d.append(x)}
+  return d;
+}
+function renderTools(){const T=$('#tools');T.innerHTML='';TOOLS.forEach(([i,l,pre])=>T.append(item(l,i,()=>{closeAll();if(pre===null){db.view='video';render();return}db.view='chat';setMode({name:l,prefix:pre});render();input.focus()},null,pre===null?'Beta':'')))}
+function renderList(){const L=$('#chatList');L.innerHTML='';db.chats.slice(0,60).forEach(c=>L.append(item(c.title,null,()=>{db.cur=c.id;db.view='chat';closeAll();render()},()=>{if(confirm('இந்த chat-ஐ நீக்கவா?')){db.chats=db.chats.filter(x=>x.id!==c.id);if(db.cur===c.id)db.cur=null;save();render();renderList()}})))}
+function newChat(){db.cur=null;db.view='chat';setMode(null);closeAll();render()}
+function setMode(m){mode=m;const t=$('#modeTag');t.style.display=m?'block':'none';t.innerHTML=m?esc(m.name)+' — விவரிக்கவும் அல்லது photo சேர்க்கவும் &nbsp;<a href="#" id="mx" style="color:var(--mute)">✕</a>':'';if(m)$('#mx').onclick=e=>{e.preventDefault();setMode(null)};input.placeholder=m?'What should I create?':'Ask anything'}
 
-  const bubble = document.createElement("div");
-  bubble.className = role === "user"
-    ? "bg-indigo-600 border border-indigo-500 text-white rounded-2xl rounded-tr-sm p-3 max-w-[85%] text-sm"
-    : "bg-slate-800 border border-slate-700 text-slate-100 rounded-2xl rounded-tl-sm p-3.5 max-w-[85%] text-sm leading-relaxed prose prose-invert";
-
-  if (role === "assistant") {
-    bubble.innerHTML = marked.parse(text);
-  } else {
-    bubble.textContent = text;
-    if (imageUrl) {
-      const im = document.createElement("img");
-      im.src = imageUrl;
-      im.style.cssText = "max-width:100%;border-radius:8px;margin-top:6px;display:block";
-      bubble.appendChild(im);
-    }
-  }
-
-  msgWrapper.appendChild(bubble);
-  chatBox.appendChild(msgWrapper);
-  scrollToBottom();
-  return bubble;
+/* ---------- settings ---------- */
+function openSettings(){
+  closeAll();const s=$('#sheet');
+  s.innerHTML=`<h3>Settings</h3><div class="set">
+  <label>Name</label><input type="text" id="sName">
+  <label>Font</label><select id="sFont"><option value="serif">Serif (default)</option><option value="sans">Simple</option><option value="round">Rounded</option><option value="mono">Mono</option></select>
+  <label>Text size</label><input type="range" id="sSize" min="14" max="22">
+  <label>Colour</label><div class="sw" id="sSw"></div>
+  <label>Theme</label><select id="sTheme"><option value="0">Light</option><option value="1">Dark</option></select>
+  <label>Layout</label><select id="sWide"><option value="0">Phone</option><option value="1">Wide (desktop)</option></select>
+  <label>Image quality</label><select id="sHd"><option value="0">Standard</option><option value="1">HD (uses more credits)</option></select>
+  <label>Read replies aloud</label><select id="sAuto"><option value="0">Off</option><option value="1">On</option></select>
+  <label>Gemini API key</label><input type="password" id="sKey" placeholder="Paste key">
+  <label>Account</label><div style="padding:0 6px"><button class="btn g" id="sAcc">Switch account</button></div>
+  <div style="display:flex;gap:8px;margin:18px 6px 4px"><button class="btn" id="sSave">Save</button><button class="btn g" id="sClr">Clear chats</button></div></div>`;
+  $('#sName').value=S.name;$('#sFont').value=S.font;$('#sSize').value=S.size;$('#sTheme').value=S.dark?'1':'0';$('#sWide').value=S.wide?'1':'0';$('#sHd').value=S.hd?'1':'0';$('#sAuto').value=S.auto?'1':'0';$('#sKey').value=localStorage.getItem(KEY)||'';
+  let col=S.ac;const sw=$('#sSw');
+  ['#5b4df0','#2563eb','#0d9488','#16a34a','#ea580c','#db2777','#111827'].forEach(c=>{const d=document.createElement('span');d.style.background=c;if(c===col)d.className='on';d.onclick=()=>{col=c;[...sw.children].forEach(x=>x.className='');d.className='on'};sw.append(d)});
+  $('#sSave').onclick=()=>{S={...S,name:$('#sName').value.trim()||'Guest',font:$('#sFont').value,size:+$('#sSize').value,ac:col,dark:$('#sTheme').value==='1',wide:$('#sWide').value==='1',hd:$('#sHd').value==='1',auto:$('#sAuto').value==='1'};const k=$('#sKey').value.trim();if(k)localStorage.setItem(KEY,k);applySet();closeAll()};
+  $('#sClr').onclick=()=>{if(confirm('எல்லா chats-ஐயும் நீக்கவா?')){db.chats=[];db.cur=null;save();render();renderList();closeAll()}};
+  $('#sAcc').onclick=async()=>{try{await puter.auth.signOut();await puter.auth.signIn();const u=await puter.auth.getUser();if(u&&u.username){S.name=u.username;applySet()}}catch(e){alert('Sign in முடியவில்லை')}};
+  showSheet();
 }
 
-// ---------- கிளிப் + மைக் buttons (classic line icons) ----------
-const ICON_COLOR = "#94a3b8";
-
-const CLIP_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
-
-const MIC_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
-
-const fileInput = document.createElement("input");
-fileInput.type = "file";
-fileInput.accept = "image/*";
-fileInput.style.display = "none";
-document.body.appendChild(fileInput);
-
-function makeBtn(svg, label) {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.innerHTML = svg;
-  b.setAttribute("aria-label", label);
-  b.style.cssText = `display:flex;align-items:center;justify-content:center;padding:0 10px;background:transparent;border:0;cursor:pointer;color:${ICON_COLOR};`;
-  return b;
-}
-const attachBtn = makeBtn(CLIP_SVG, "Add screenshot");
-const micBtn = makeBtn(MIC_SVG, "Voice input");
-sendBtn.parentNode.insertBefore(micBtn, sendBtn);
-sendBtn.parentNode.insertBefore(attachBtn, micBtn);
-
-// screenshot எங்கே சேர்ப்பது என்ற குறிப்பு
-const hintBar = document.createElement("div");
-hintBar.textContent = "Screenshot உள்ளதா? கீழே உள்ள கிளிப் icon தொட்டு சேர்க்கவும்.";
-hintBar.style.cssText = "font-size:12px;color:#94a3b8;padding:6px 14px 0;";
-chatForm.parentNode.insertBefore(hintBar, chatForm);
-
-const previewBar = document.createElement("div");
-previewBar.style.cssText = "display:none;align-items:center;padding:6px 12px;";
-chatForm.parentNode.insertBefore(previewBar, chatForm);
-
-function showPreview() {
-  if (!pendingImage) {
-    previewBar.style.display = "none";
-    previewBar.innerHTML = "";
-    hintBar.style.display = "block";
-    return;
-  }
-  hintBar.style.display = "none";
-  previewBar.style.display = "flex";
-  previewBar.innerHTML = `<img src="${pendingImage.preview}" style="height:56px;border-radius:8px;margin-right:10px"><span style="font-size:12px;color:#94a3b8;flex:1">படம் சேர்ந்தது. Send தொடவும்.</span><button type="button" id="rm-img" style="font-size:18px;background:transparent;border:0;color:#94a3b8;cursor:pointer">✕</button>`;
-  document.getElementById("rm-img").onclick = () => {
-    pendingImage = null;
-    showPreview();
-  };
-}
-
-attachBtn.onclick = () => fileInput.click();
-
-fileInput.onchange = () => {
-  const file = fileInput.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const img = new Image();
-    img.onload = () => {
-      const max = 1280;
-      const scale = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.width * scale);
-      c.height = Math.round(img.height * scale);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      const url = c.toDataURL("image/jpeg", 0.8);
-      pendingImage = { mimeType: "image/jpeg", data: url.split(",")[1], preview: url };
-      showPreview();
-    };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
-  fileInput.value = "";
-};
-
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recog = null;
-let recognizing = false;
-
-function micIdle() {
-  recognizing = false;
-  micBtn.style.color = ICON_COLOR;
-}
-
-micBtn.onclick = () => {
-  if (!SR) {
-    alert("இந்த browser-ல் voice வசதி இல்லை. Chrome பயன்படுத்தவும்.");
-    return;
-  }
-  if (recognizing) {
-    recog.stop();
-    return;
-  }
-  recog = new SR();
-  recog.lang = "ta-IN";
-  recog.interimResults = true;
-  recog.continuous = false;
-  const base = userInput.value;
-  recog.onstart = () => {
-    recognizing = true;
-    micBtn.style.color = "#ef4444";
-  };
-  recog.onresult = (e) => {
-    let t = "";
-    for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-    userInput.value = (base ? base + " " : "") + t;
-  };
-  recog.onend = micIdle;
-  recog.onerror = micIdle;
-  recog.start();
-};
-
-// ---------- Gemini streaming ----------
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function streamFromModel(model, apiKey, onChunk) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey,
-    },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      contents: conversationHistory,
-    }),
-  });
-
-  if (!response.ok) {
-    let msg = "";
-    try { msg = (await response.json()).error.message; } catch (e) {}
-    const err = new Error(msg || "HTTP " + response.status);
-    err.status = response.status;
-    throw err;
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let full = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop();
-    for (const line of lines) {
-      if (!line.startsWith("data:")) continue;
-      const json = line.slice(5).trim();
-      if (!json) continue;
-      try {
-        const d = JSON.parse(json);
-        const parts = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
-        for (const p of parts) {
-          if (p.text && !p.thought) {
-            full += p.text;
-            onChunk(full);
-          }
-        }
-      } catch (e) {}
+/* ---------- Gemini chat ---------- */
+function nowLine(){const d=new Date();return 'Today is '+d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'. Your training knowledge may be outdated and the real date is later than your training data. Never tell the user it is an earlier year, and never say a version number or date from the user is impossible. For latest versions, news or prices: use search if available, otherwise say you cannot verify it and tell what you last knew.\n\n'}
+let useSearch=true;
+async function stream(model,key,sys,contents,onChunk){
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':streamGenerateContent?alt=sse';
+  const body={systemInstruction:{parts:[{text:sys}]},contents};
+  if(useSearch)body.tools=[{google_search:{}}];
+  const go=()=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+  let r=await go();
+  if(!r.ok&&useSearch&&[400,403,429].includes(r.status)){useSearch=false;delete body.tools;r=await go()}
+  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}const e=new Error(m||'HTTP '+r.status);e.status=r.status;throw e}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',full='';
+  for(;;){
+    const {done,value}=await rd.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});const ls=buf.split('\n');buf=ls.pop();
+    for(const l of ls){
+      if(!l.startsWith('data:'))continue;const j=l.slice(5).trim();if(!j)continue;
+      try{const d=JSON.parse(j);const ps=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];for(const p of ps)if(p.text&&!p.thought){full+=p.text;onChunk(full)}}catch(e){}
     }
   }
   return full;
 }
+function hist(c){
+  const out=[],ms=c.msgs.filter(m=>!m.err&&!m.gen).slice(-24);
+  ms.forEach((m,i)=>{
+    const role=m.r==='user'?'user':'model',last=i===ms.length-1,parts=[];
+    if(last&&m.atts)m.atts.forEach(a=>parts.push(a.data?{inlineData:{mimeType:a.mimeType,data:a.data}}:{text:a.text}));
+    parts.push({text:m.t+(m.nimg&&!(last&&m.atts)?' [attachment sent]':'')});
+    const pv=out[out.length-1];
+    if(pv&&pv.role===role)pv.parts.push(...parts);else out.push({role,parts});
+  });
+  while(out.length&&out[0].role!=='user')out.shift();
+  return out;
+}
+async function gen(c,extra,onChunk){
+  const key=localStorage.getItem(KEY),sys=nowLine()+SYSTEM+(extra||''),contents=hist(c);
+  let reply='',bad=false;
+  outer:for(const m of MODELS){for(let a=0;a<3;a++){
+    try{reply=await stream(m,key,sys,contents,onChunk||(()=>{}));if(reply)break outer;throw new Error('empty')}
+    catch(e){if(e.status===401||e.status===403||/api key/i.test(e.message)){bad=true;break outer}if(e.status===404)break;await sleep(1500*(a+1))}
+  }}
+  return {reply,bad};
+}
+async function chatReply(c){
+  const o=addAI({loading:true});
+  const {reply,bad}=await gen(c,'',t=>o.set(t));
+  if(reply){c.msgs.push({r:'ai',t:reply});if(S.auto)say(reply)}
+  else c.msgs.push({r:'ai',err:true,t:bad?'API key சரியாக இல்லை. Settings-ல் சரிபார்க்கவும்.':'Vicky AI இப்போது கொஞ்சம் busy. சில நொடிகள் கழித்து மீண்டும் அனுப்புங்கள்.'});
+}
 
-chatForm.onsubmit = async (e) => {
-  e.preventDefault();
-  const apiKey = localStorage.getItem("vicky_gemini_key");
-  if (!apiKey) {
-    settingsBtn.click();
-    return;
+/* ---------- images ---------- */
+function quota(){let q;try{q=JSON.parse(localStorage.getItem('vicky_imgq'))}catch(e){}const d=new Date().toDateString();return(q&&q.d===d)?q:{d,n:0,t:0}}
+function quotaCheck(){const q=quota();if(q.n>=DAILY_MAX)return 'இன்றைய '+DAILY_MAX+' படங்கள் முடிந்துவிட்டன. நாளை மீண்டும் முயற்சிக்கவும்.';const w=q.t+COOLDOWN_MIN*60000-Date.now();return(q.t&&w>0)?'அடுத்த படத்துக்கு இன்னும் '+Math.ceil(w/60000)+' நிமிடம் காத்திருக்கவும்.':''}
+function quotaUse(){const q=quota();q.n++;q.t=Date.now();try{localStorage.setItem('vicky_imgq',JSON.stringify(q))}catch(e){}}
+async function puterImage(prompt,att,hd){
+  const models=hd?['gemini-3-pro-image-preview','gemini-2.5-flash-image-preview']:['gemini-2.5-flash-image-preview','gemini-3-pro-image-preview'];
+  let last='';
+  for(const model of models){
+    try{
+      const opt={model,provider:'gemini'};
+      if(att){opt.input_image=att.data;opt.input_image_mime_type=att.mimeType}
+      const el=await puter.ai.txt2img(prompt,opt),s=el&&el.src;
+      if(!s)throw new Error('no image');
+      return URL.createObjectURL(await (await fetch(s)).blob());
+    }catch(e){last=(e&&(e.message||(e.error&&e.error.message)))||JSON.stringify(e)||'failed';if(/auth|cancel|sign/i.test(last))break}
   }
-
-  const message = userInput.value.trim();
-  if (!message && !pendingImage) return;
-
-  const text = message || "இந்த screenshot-ல் என்ன பிரச்சினை? நான் எங்கே என்ன செய்ய வேண்டும்?";
-  const img = pendingImage;
-  pendingImage = null;
-  showPreview();
-
-  appendMessage("user", message || "Screenshot", img && img.preview);
-  userInput.value = "";
-  sendBtn.disabled = true;
-
-  const parts = [];
-  if (img) parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
-  parts.push({ text });
-  conversationHistory.push({ role: "user", parts });
-  const userIndex = conversationHistory.length - 1;
-
-  const loadingWrapper = document.createElement("div");
-  loadingWrapper.className = "flex gap-2.5 justify-start text-xs text-slate-400 italic";
-  loadingWrapper.textContent = "Vicky AI is thinking...";
-  chatBox.appendChild(loadingWrapper);
-  scrollToBottom();
-
-  let bubble = null;
-  let reply = "";
-  let keyProblem = false;
-
-  outer:
-  for (const model of MODELS) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        reply = await streamFromModel(model, apiKey, (t) => {
-          if (!bubble) {
-            loadingWrapper.remove();
-            bubble = appendMessage("assistant", "");
-          }
-          bubble.innerHTML = marked.parse(t);
-          scrollToBottom();
-        });
-        if (reply) break outer;
-        throw new Error("empty reply");
-      } catch (err) {
-        if (bubble) {
-          bubble.parentElement.remove();
-          bubble = null;
-          chatBox.appendChild(loadingWrapper);
-        }
-        if (err.status === 401 || err.status === 403 || /api key/i.test(err.message)) {
-          keyProblem = true;
-          break outer;
-        }
-        if (err.status === 404) break;
-        await sleep(1500 * (attempt + 1));
-      }
-    }
-  }
-
-  loadingWrapper.remove();
-
-  if (reply) {
-    conversationHistory[userIndex] = {
-      role: "user",
-      parts: [{ text: text + (img ? " [screenshot sent]" : "") }],
-    };
-    conversationHistory.push({ role: "model", parts: [{ text: reply }] });
-  } else {
-    conversationHistory.pop();
-    appendMessage(
-      "assistant",
-      keyProblem
-        ? "⚠️ API key சரியாக இல்லை. ⚙️ Key-ல் சரிபார்க்கவும்."
-        : "😅 Vicky AI இப்போது கொஞ்சம் busy. சில நொடிகள் கழித்து மீண்டும் அனுப்புங்கள்."
-    );
-  }
-  sendBtn.disabled = false;
-};
+  throw new Error(last);
+}
+async function toEnglish(text){
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[0]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':localStorage.getItem(KEY)},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Rewrite as one detailed English image prompt. Output only the pro
