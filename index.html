@@ -4,111 +4,136 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Vicky AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Tamil:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://js.puter.com/v2/"></script>
 <style>
-:root{--bg:#fff;--soft:#f3f4fb;--line:#e6e8f0;--text:#1c1f2e;--mute:#6b7186;--b1:#5b4df0;--b2:#9b5cf6}
+:root{--bg:#fff;--soft:#f4f5f8;--line:#e7e8ee;--text:#16181f;--mute:#6c7080;--ac:#5b4df0;--fs:16px;--ff:'Noto Serif Tamil',Georgia,serif}
+html.dark{--bg:#121318;--soft:#1d1f27;--line:#2a2d38;--text:#ececf1;--mute:#9a9eb0}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Tamil","Segoe UI",Roboto,sans-serif}
-button{font-family:inherit;cursor:pointer;color:inherit}
-textarea,input{font-family:inherit}
-#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:860px;margin:0 auto}
-header{display:flex;align-items:center;gap:4px;padding:8px 10px;border-bottom:1px solid var(--line)}
-.ib{display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:0;padding:8px;border-radius:10px;color:var(--mute)}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--ff);font-size:var(--fs)}
+button{font:inherit;color:inherit;cursor:pointer}
+textarea,input,select{font:inherit;color:inherit}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;margin:0 auto;max-width:860px}
+html.wide #app{max-width:1200px}
+header{display:flex;align-items:center;padding:8px 10px}
+header .ttl{flex:1;text-align:center;font-weight:600}
+.ib{display:flex;align-items:center;justify-content:center;gap:6px;background:none;border:0;padding:9px;border-radius:12px;color:var(--mute)}
 .ib:active{background:var(--soft)}
-.brand{display:flex;align-items:center;gap:8px;font-size:17px;margin-left:4px}
-.logo{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-weight:700}
-main{flex:1;overflow-y:auto;overscroll-behavior:contain}
-#welcome{display:flex;flex-direction:column;align-items:center;text-align:center;padding:48px 20px 20px;animation:fadeUp .6s}
-.logo.big{width:84px;height:84px;font-size:42px;border-radius:26px;box-shadow:0 12px 36px rgba(91,77,240,.35);animation:float 3s ease-in-out infinite}
-#welcome h1{font-size:28px;margin:22px 0 6px;background:linear-gradient(135deg,var(--b1),var(--b2));-webkit-background-clip:text;background-clip:text;color:transparent}
-#welcome p{margin:0;color:var(--mute);font-size:17px;line-height:1.6}
+main{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 14px}
+#welcome{min-height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px 0 60px;animation:up .5s}
+#welcome h1{font-size:2em;margin:0 0 6px;font-weight:600}
+#welcome p{margin:0;font-size:1.25em;color:var(--mute)}
 .sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:26px}
-.sug{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-size:14px}
-.sug:active{background:var(--soft)}
-.tip{margin-top:22px;font-size:13px;color:var(--mute);line-height:1.8;max-width:420px}
-#chat{display:none;padding:10px 12px}
-.msg{display:flex;gap:10px;margin:14px 0;animation:fadeUp .25s}
-.msg.user{justify-content:flex-end}
-.ubub{background:var(--soft);padding:10px 14px;border-radius:18px 18px 4px 18px;max-width:85%;white-space:pre-wrap;overflow-wrap:anywhere}
+.sug{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:9px 15px;font-size:.88em}
+#chat{display:none;padding-bottom:10px}
+.msg{margin:16px 0;animation:up .25s;-webkit-user-select:none;user-select:none}
+.msg.user{display:flex;justify-content:flex-end}
+.ubub{background:var(--soft);padding:10px 14px;border-radius:18px 18px 4px 18px;max-width:86%;white-space:pre-wrap;overflow-wrap:anywhere}
 .thumb{display:block;max-width:100%;max-height:220px;border-radius:10px;margin-top:8px}
-.av{flex:none;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
-.abody{flex:1;min-width:0}
-.card{border:1px solid var(--line);border-radius:4px 18px 18px 18px;padding:12px 15px;line-height:1.7;overflow-wrap:anywhere;font-size:15.5px}
-.card p{margin:0 0 .7em}.card p:last-child{margin:0}
-.card pre{overflow:auto;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:12px;font-size:13px}
-.card code{background:var(--soft);padding:1px 5px;border-radius:5px;font-size:.92em}
-.card pre code{background:none;padding:0}
-.card img.gen{display:block;max-width:100%;border-radius:12px}
-.card table{border-collapse:collapse;display:block;overflow:auto}
-.card td,.card th{border:1px solid var(--line);padding:5px 9px}
-.acts{display:flex;gap:2px;margin-top:4px}
-.acts .ib{padding:7px}
-.acts .ib.on{color:var(--b1);background:var(--soft)}
-.dots span{display:inline-block;width:8px;height:8px;margin:3px;border-radius:50%;background:var(--b1);animation:bounce 1.2s infinite}
-.dots span:nth-child(2){animation-delay:.15s}
-.dots span:nth-child(3){animation-delay:.3s}
-@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes float{50%{transform:translateY(-8px)}}
-footer{padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))}
-#preview{display:none;align-items:center;gap:10px;padding:4px 4px 8px;font-size:13px;color:var(--mute)}
-#preview img{height:52px;border-radius:8px}
-.box{border:1.5px solid var(--line);border-radius:22px;padding:8px 10px 6px;background:#fff;box-shadow:0 4px 18px rgba(30,30,60,.06)}
-.box:focus-within{border-color:var(--b1)}
-#input{width:100%;border:0;outline:0;resize:none;font-size:16px;line-height:1.5;max-height:160px;padding:4px 6px;background:transparent;color:var(--text)}
-.row{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
-.chip{font-size:12.5px;padding:7px 9px}
-.chip.on{background:var(--soft);color:var(--b1)}
-.send{margin-left:auto;width:42px;height:42px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;display:flex;align-items:center;justify-content:center}
+.abody{line-height:1.75;overflow-wrap:anywhere}
+.abody p{margin:0 0 .7em}.abody p:last-child{margin:0}
+.abody pre{overflow:auto;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:12px;font-size:.82em}
+.abody code{background:var(--soft);padding:1px 5px;border-radius:5px}
+.abody pre code{background:none;padding:0}
+.abody img.gen,.abody video{display:block;max-width:100%;border-radius:14px}
+.acts{display:flex;gap:2px;margin-top:2px}
+.acts .ib{padding:7px}.acts .ib.on{color:var(--ac)}
+.dots span{display:inline-block;width:8px;height:8px;margin:3px;border-radius:50%;background:var(--ac);animation:bn 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes bn{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+footer{padding:6px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+#preview{display:none;gap:10px;padding:4px 4px 8px;overflow-x:auto}
+#preview .pv{position:relative;flex:none}
+#preview img{height:56px;border-radius:10px;display:block}
+#preview .pv button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:#000a;color:#fff;font-size:13px;line-height:20px;padding:0}
+#modeTag{display:none;font-size:.8em;color:var(--ac);padding:0 8px 6px}
+.box{border:1.5px solid var(--line);border-radius:26px;padding:8px 10px 6px;background:var(--bg)}
+.box:focus-within{border-color:var(--ac)}
+#input{width:100%;border:0;outline:0;resize:none;background:transparent;line-height:1.5;max-height:160px;padding:4px 6px}
+.row{display:flex;align-items:center;gap:2px}
+.row .sp{flex:1}
+.send{width:40px;height:40px;border-radius:50%;border:0;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center}
 .send:disabled{opacity:.5}
-#scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:20}
-#drawer{position:fixed;top:0;bottom:0;left:0;width:290px;max-width:84%;background:#fff;z-index:21;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column;padding:14px 12px;overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,.12)}
+.orbBtn{width:34px;height:34px;border-radius:50%;border:0;margin:0 6px;background:radial-gradient(circle at 30% 30%,#fff9,transparent 40%),linear-gradient(135deg,var(--ac),#c084fc);box-shadow:inset -3px -4px 8px #0003,0 2px 8px #0003}
+.pop{position:fixed;z-index:30;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #0002;padding:6px;display:none;min-width:220px}
+.pop button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:11px 12px;border-radius:10px;text-align:left}
+.pop button:active{background:var(--soft)}
+#scrim{position:fixed;inset:0;background:#0006;display:none;z-index:20}
+#drawer{position:fixed;top:0;bottom:0;left:0;width:300px;max-width:86%;background:var(--bg);z-index:21;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column;padding:14px 10px;overflow-y:auto}
 #drawer.open{transform:none}
-.sec{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 6px;font-size:12px;color:var(--mute);letter-spacing:.05em}
+.dh{font-size:1.25em;font-weight:600;padding:6px 8px 10px}
+.sec{font-size:.72em;letter-spacing:.06em;color:var(--mute);margin:14px 8px 4px}
 .it{display:flex;align-items:center;gap:4px;border-radius:10px}
 .it:active{background:var(--soft)}
-.it .lab{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:none;border:0;text-align:left;padding:9px 8px;font-size:14.5px}
+.it .lab{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;text-align:left;padding:10px 8px}
 .it .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btn{border:0;border-radius:12px;padding:10px 16px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-size:14.5px}
-.btn.ghost{background:var(--soft);color:var(--text)}
-#projectView{display:none;padding:18px 16px}
-#projectView textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px;font-size:15px}
-.prow{display:flex;gap:8px;margin:10px 0 18px}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:30;padding:20px}
-#modal .in{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:380px}
-#modal input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:15px;margin:10px 0 14px}
+.badge{font-size:.68em;background:var(--soft);color:var(--mute);border-radius:8px;padding:2px 7px;margin-left:auto}
+.prof{display:flex;align-items:center;gap:10px;margin-top:auto;border:0;background:var(--soft);border-radius:14px;padding:10px;text-align:left}
+.ava{width:34px;height:34px;border-radius:50%;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);border-radius:20px 20px 0 0;box-shadow:0 -8px 30px #0003;padding:10px 12px calc(14px + env(safe-area-inset-bottom,0px));display:none;max-height:85vh;overflow-y:auto}
+.sheet h3{margin:6px 6px 10px}
+.sheet button.o{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:13px 10px;border-radius:12px;text-align:left}
+.sheet button.o:active{background:var(--soft)}
+.set label{display:block;font-size:.8em;color:var(--mute);margin:14px 6px 6px}
+.set select,.set input[type=text],.set input[type=password]{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg)}
+.set input[type=range]{width:100%}
+.sw{display:flex;gap:10px;padding:0 6px;flex-wrap:wrap}
+.sw span{width:34px;height:34px;border-radius:50%;border:3px solid transparent}
+.sw span.on{border-color:var(--text)}
+.btn{border:0;border-radius:12px;padding:11px 16px;background:var(--ac);color:#fff}
+.btn.g{background:var(--soft);color:var(--text)}
+#vpage textarea{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:10px;background:var(--bg);resize:none}
+#live{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center;padding:20px}
+#orb{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fffc,transparent 38%),linear-gradient(135deg,var(--ac),#c084fc);box-shadow:inset -14px -18px 34px #0004,0 18px 50px #5b4df066}
+#orb.listen{animation:pulse 1.6s ease-in-out infinite}
+#orb.think{animation:spin 1.4s linear infinite;border-radius:42% 58% 55% 45%}
+#orb.speak{animation:talk .55s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes talk{25%{transform:scale(1.1,.93)}75%{transform:scale(.93,1.1)}}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
     <button class="ib" id="menuBtn" data-ic="menu" aria-label="Menu"></button>
-    <div class="brand"><span class="logo">V</span><b>Vicky AI</b></div>
-    <span style="flex:1"></span>
-    <button class="ib" id="newBtn" data-ic="plus" aria-label="புதிய chat"></button>
+    <div class="ttl" id="ttl">Vicky AI</div>
+    <button class="ib" id="newBtn" data-ic="edit" aria-label="New chat"></button>
   </header>
-
   <main id="main">
     <section id="welcome">
-      <span class="logo big">V</span>
-      <h1>Welcome! வணக்கம்</h1>
-      <p>I am Vicky AI.<br>How can I help you today?</p>
+      <h1>Hello! I am Vicky AI</h1>
+      <p>How can I help you?</p>
       <div class="sugs" id="sugs"></div>
-      <div class="tip">முதல் முறை: மேலே ☰ Menu → API Key-ல் உங்கள் Gemini key-ஐப் போடவும்.</div>
     </section>
     <section id="chat"></section>
-    <section id="projectView"></section>
+    <section id="vpage" style="display:none;padding:14px 0">
+      <h2 style="margin:0 0 4px">Video generator</h2>
+      <p style="margin:0 0 12px;color:var(--mute);font-size:.9em">வீடியோவை விவரியுங்கள். இது உங்கள் Puter credits-ஐப் பயன்படுத்தும். Sample mode இலவசம்.</p>
+      <textarea id="vPrompt" rows="4" placeholder="A fox running through snow at sunset..."></textarea>
+      <select id="vModel" style="width:100%;margin:10px 0;padding:10px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg)">
+        <option value="google/veo-3.1-lite">Veo 3.1 Lite (cheapest)</option>
+        <option value="google/veo-3.1-fast">Veo 3.1 Fast</option>
+        <option value="openai/sora-2">Sora 2</option>
+      </select>
+      <label style="display:block;margin:6px 0 12px"><input type="checkbox" id="vTest"> Sample mode (free, not a real video)</label>
+      <button class="btn" id="vGo">Generate video</button>
+      <div id="vOut" style="margin-top:16px"></div>
+    </section>
   </main>
-
   <footer>
     <div id="preview"></div>
+    <div id="modeTag"></div>
     <div class="box">
-      <textarea id="input" rows="1" placeholder="கேள்வி எழுதுங்கள்... Ask anything"></textarea>
+      <textarea id="input" rows="1" placeholder="Ask anything"></textarea>
       <div class="row">
-        <button type="button" class="ib chip" id="clipBtn"><span data-ic="clip" data-sz="20"></span>Screenshot</button>
-        <button type="button" class="ib chip" id="imgBtn"><span data-ic="image" data-sz="20"></span>படம் உருவாக்கு</button>
-        <button type="button" class="ib chip" id="micBtn"><span data-ic="mic" data-sz="20"></span>பேசு</button>
-        <button type="button" class="send" id="sendBtn" data-ic="send" data-sz="20" aria-label="Send"></button>
+        <button class="ib" id="plusBtn" data-ic="plus" aria-label="Add"></button>
+        <span class="sp"></span>
+        <button class="ib" id="micBtn" data-ic="mic" aria-label="Voice to text"></button>
+        <button class="orbBtn" id="liveBtn" aria-label="Live voice"></button>
+        <button class="send" id="sendBtn" data-ic="send" data-sz="20" aria-label="Send"></button>
       </div>
     </div>
   </footer>
@@ -116,371 +141,17 @@ footer{padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))}
 
 <div id="scrim"></div>
 <aside id="drawer">
-  <div class="brand"><span class="logo">V</span><b>Vicky AI</b></div>
-  <button class="btn" id="dNew" style="margin-top:16px">+ புதிய chat</button>
-  <div class="sec"><span>PROJECTS</span><button class="ib" id="dProj" data-ic="plus" data-sz="18" aria-label="புதிய project"></button></div>
-  <div id="projList"></div>
-  <div class="sec"><span>CHATS</span></div>
+  <div class="dh">Vicky AI</div>
+  <div class="sec">CREATE</div>
+  <div id="tools"></div>
+  <div class="sec">CHATS</div>
   <div id="chatList"></div>
-  <div style="flex:1;min-height:20px"></div>
-  <label class="it" style="padding:10px 8px;font-size:14px;gap:10px"><input type="checkbox" id="auto"> பதிலைத் தானாக வாசி</label>
-  <button class="ib" id="dKey" style="justify-content:flex-start;font-size:14.5px;color:var(--text)"><span data-ic="key" data-sz="20"></span>API Key</button>
+  <div style="height:16px"></div>
+  <button class="prof" id="profBtn"><span class="ava" id="ava">V</span><span><b id="pname">Guest</b><br><small style="color:var(--mute)">Settings</small></span></button>
 </aside>
-
-<div id="modal"><div class="in">
-  <b style="font-size:17px">Google Gemini API Key</b>
-  <div style="font-size:13px;color:var(--mute);margin-top:6px">இந்த key உங்கள் phone-ல் மட்டுமே சேமிக்கப்படும்.</div>
-  <input id="kIn" type="password" placeholder="Key-ஐ paste செய்யவும்">
-  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" id="kCancel">Cancel</button><button class="btn" id="kSave">Save</button></div>
-</div></div>
-
-<script>
-const $=s=>document.querySelector(s);
-const P={
-menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
-plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-key:'<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
-clip:'<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
-mic:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
-send:'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
-image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
-speaker:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
-copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
-download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
-share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
-folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
-chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>',
-x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
-};
-const ic=(n,s)=>'<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+P[n]+'</svg>';
-document.querySelectorAll('[data-ic]').forEach(e=>{e.innerHTML=ic(e.dataset.ic,e.dataset.sz||22)});
-
-const KEY='vicky_gemini_key';
-const MODELS=["gemini-flash-lite-latest","gemini-3.8-flash","gemini-flash-latest"];
-const SYSTEM=`You are Vicky AI (விக்கி ஏஐ), a friendly bilingual assistant for English and Tamil. Reply in the same language the user writes (Tamil script, English, or Tanglish). Give concise, helpful, well-formatted answers with markdown. When the user sends a screenshot, look at it carefully: say exactly what you see, where the problem is, and give clear numbered steps telling them where to tap (for example, if an icon is missing, suggest checking the three-dot menu). Ask for another screenshot if you need more detail.`;
-
-let db;try{db=JSON.parse(localStorage.getItem('vicky_data'))}catch(e){}
-if(!db||!db.chats)db={chats:[],projects:[],auto:false};
-db.cur=null;db.view='chat';db.proj=null;
-const save=()=>{try{localStorage.setItem('vicky_data',JSON.stringify(db,(k,v)=>(k==='img'||(k==='gen'&&typeof v==='string'&&v.startsWith('data:')))?undefined:v))}catch(e){}};()=>{try{localStorage.setItem('vicky_data',JSON.stringify(db,(k,v)=>k==='img'?undefined:v))}catch(e){}};
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const md=t=>window.marked?marked.parse(t):esc(t).replace(/\n/g,'<br>');
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const mk=(cls,html)=>{const d=document.createElement('div');d.className=cls;if(html)d.innerHTML=html;return d};
-
-const main=$('#main'),chat=$('#chat'),input=$('#input'),sendBtn=$('#sendBtn');
-let pending=null,busy=false,imageMode=false;
-const curChat=()=>db.chats.find(c=>c.id===db.cur);
-function scroll(force){if(force||main.scrollHeight-main.scrollTop-main.clientHeight<220)main.scrollTop=main.scrollHeight}
-function autosize(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,160)+'px'}
-
-/* ---------- messages ---------- */
-function actBtn(name,label,fn){const b=document.createElement('button');b.className='ib';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=ic(name,18);b.onclick=()=>fn(b);return b}
-function addUser(m){
-  const w=mk('msg user','<div class="ubub"></div>');const b=w.firstChild;
-  b.textContent=(m.hadImg&&!m.img?'[Screenshot] ':'')+m.t;
-  if(m.img){const im=new Image();im.src=m.img;im.className='thumb';b.appendChild(im)}
-  chat.appendChild(w);
-}
-function addAI(m){
-  const w=mk('msg ai','<span class="av">V</span><div class="abody"><div class="card"></div><div class="acts"></div></div>');
-  const card=w.querySelector('.card'),acts=w.querySelector('.acts');
-  const o={dots(){card.innerHTML='<span class="dots"><span></span><span></span><span></span></span>'},set(t){card.innerHTML=md(t);scroll()}};
-  if(m.loading)o.dots();
-  else if(m.gen){
-    card.innerHTML='<img class="gen" src="'+esc(m.gen)+'" alt="">';
-    acts.append(actBtn('download','Download',()=>dlImage(m.gen)),actBtn('share','Share',()=>shareText(m.gen)));
-  }else{
-    card.innerHTML=md(m.t);
-    if(!m.err)acts.append(actBtn('speaker','வாசி',b=>speak(m.t,b)),actBtn('copy','Copy',()=>copyText(m.t)),actBtn('download','Download',()=>dlText(m.t)),actBtn('share','Share',()=>shareText(m.t)));
-  }
-  chat.appendChild(w);scroll(true);return o;
-}
-function copyText(t){
-  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()});
-}
-function dlText(t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download='vicky-ai.txt';document.body.appendChild(a);a.click();a.remove()}
-async function dlImage(u){try{const r=await fetch(u);const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='vicky-ai.png';document.body.appendChild(a);a.click();a.remove()}catch(e){window.open(u,'_blank')}}
-function shareText(t){if(navigator.share)navigator.share({text:t}).catch(()=>{});else{copyText(t);alert('Copy ஆகிவிட்டது')}}
-let speakBtn=null;
-function speak(text,btn){
-  const s=window.speechSynthesis;if(!s){alert('இந்த browser-ல் வாசிக்கும் வசதி இல்லை');return}
-  const same=speakBtn===btn&&s.speaking;
-  s.cancel();if(speakBtn)speakBtn.classList.remove('on');speakBtn=null;
-  if(same)return;
-  const clean=text.replace(/```[\s\S]*?```/g,' ').replace(/[#*_`>~|\[\]]/g,' ').replace(/\s+/g,' ').trim();
-  const u=new SpeechSynthesisUtterance(clean);
-  u.lang=/[\u0B80-\u0BFF]/.test(clean)?'ta-IN':'en-US';
-  u.onend=u.onerror=()=>{if(btn)btn.classList.remove('on')};
-  if(btn){btn.classList.add('on');speakBtn=btn}
-  s.speak(u);
-}
-
-/* ---------- render ---------- */
-function render(){
-  const c=curChat();
-  const showChat=db.view==='chat'&&c&&c.msgs.length;
-  $('#welcome').style.display=(db.view==='chat'&&!showChat)?'flex':'none';
-  chat.style.display=showChat?'block':'none';
-  $('#projectView').style.display=db.view==='project'?'block':'none';
-  chat.innerHTML='';
-  if(showChat)c.msgs.forEach(m=>m.r==='user'?addUser(m):addAI(m));
-  if(db.view==='project')renderProject();
-  scroll(true);
-}
-function item(label,icon,go,del){
-  const d=mk('it');const b=document.createElement('button');b.className='lab';
-  b.innerHTML='<span style="color:var(--mute);display:flex">'+ic(icon,18)+'</span><span class="t"></span>';
-  b.querySelector('.t').textContent=label;b.onclick=go;d.append(b);
-  if(del){const x=document.createElement('button');x.className='ib';x.innerHTML=ic('trash',16);x.setAttribute('aria-label','Delete');x.onclick=e=>{e.stopPropagation();del()};d.append(x)}
-  return d;
-}
-function renderList(){
-  const C=$('#chatList');C.innerHTML='';
-  db.chats.filter(c=>!c.proj).slice(0,60).forEach(c=>C.append(item(c.title,'chat',()=>openChat(c.id),()=>delChat(c.id))));
-  const L=$('#projList');L.innerHTML='';
-  db.projects.forEach(p=>L.append(item(p.name,'folder',()=>openProject(p.id))));
-}
-const openDrawer=()=>{$('#drawer').classList.add('open');$('#scrim').style.display='block'};
-const closeDrawer=()=>{$('#drawer').classList.remove('open');$('#scrim').style.display='none'};
-function newChat(){db.cur=null;db.view='chat';db.proj=null;closeDrawer();render();renderList()}
-function openChat(id){db.cur=id;db.view='chat';closeDrawer();render()}
-function delChat(id){
-  if(!confirm('இந்த chat-ஐ நீக்கவா?'))return;
-  db.chats=db.chats.filter(c=>c.id!==id);if(db.cur===id)db.cur=null;save();render();renderList();
-}
-function newProject(){
-  const n=(prompt('Project பெயர்?')||'').trim();if(!n)return;
-  const p={id:uid(),name:n,ins:''};db.projects.unshift(p);save();openProject(p.id);
-}
-function openProject(id){db.proj=id;db.view='project';db.cur=null;closeDrawer();render();renderList()}
-function renderProject(){
-  const p=db.projects.find(x=>x.id===db.proj);
-  if(!p){newChat();return}
-  const v=$('#projectView');
-  v.innerHTML='<h2 style="margin:0 0 4px"></h2><p style="color:var(--mute);font-size:14px;margin:0 0 14px">Instructions: இந்த project-ல் Vicky AI எப்படிப் பதில் சொல்ல வேண்டும் என்று எழுதுங்கள்.</p><textarea id="pIns" rows="4"></textarea><div class="prow"><button class="btn" id="pSave">Save</button><button class="btn ghost" id="pDel">Project நீக்கு</button></div><b>Chats</b><div id="pChats" style="margin:6px 0"></div><p style="color:var(--mute);font-size:13px">கீழே கேள்வி எழுதினால் புதிய chat இந்த project-ல் உருவாகும்.</p>';
-  v.querySelector('h2').textContent=p.name;$('#pIns').value=p.ins||'';
-  $('#pSave').onclick=()=>{p.ins=$('#pIns').value;save();alert('Save ஆனது')};
-  $('#pDel').onclick=()=>{if(confirm('Project-ஐயும் அதன் chats-ஐயும் நீக்கவா?')){db.chats=db.chats.filter(c=>c.proj!==p.id);db.projects=db.projects.filter(x=>x.id!==p.id);save();newChat()}};
-  const L=$('#pChats');const cs=db.chats.filter(c=>c.proj===p.id);
-  if(!cs.length)L.textContent='இன்னும் chat இல்லை';
-  cs.forEach(c=>L.append(item(c.title,'chat',()=>openChat(c.id),()=>delChat(c.id))));
-}
-
-/* ---------- Gemini ---------- */
-async function stream(model,key,sys,contents,onChunk){
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':streamGenerateContent?alt=sse',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents})});
-  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}const e=new Error(m||'HTTP '+r.status);e.status=r.status;throw e}
-  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',full='';
-  for(;;){
-    const {done,value}=await rd.read();if(done)break;
-    buf+=dec.decode(value,{stream:true});const ls=buf.split('\n');buf=ls.pop();
-    for(const l of ls){
-            if(!l.startsWith('data:'))continue;const j=l.slice(5).trim();if(!j)continue;
-      try{const d=JSON.parse(j);const ps=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];
-        for(const p of ps)if(p.text&&!p.thought){full+=p.text;onChunk(full)}}catch(e){}
-    }
-  }
-  return full;
-}
-function hist(c,img){
-  const out=[];const ms=c.msgs.filter(m=>!m.err&&!m.gen).slice(-24);
-  ms.forEach((m,i)=>{
-    const role=m.r==='user'?'user':'model';const last=i===ms.length-1;
-    const parts=[{text:m.t+(m.hadImg&&!(last&&img)?' [screenshot sent]':'')}];
-    if(last&&img)parts.unshift({inlineData:{mimeType:img.mimeType,data:img.data}});
-    const prev=out[out.length-1];
-    if(prev&&prev.role===role)prev.parts.push(...parts);else out.push({role,parts});
-  });
-  while(out.length&&out[0].role!=='user')out.shift();
-  return out;
-}
-async function chatReply(c,img,key){
-  const p=c.proj&&db.projects.find(x=>x.id===c.proj);
-  const sys=nowLine()+SYSTEM+(p&&p.ins?'\n\nProject "'+p.name+'" instructions:\n'+p.ins:'');
-  const contents=hist(c,img);const o=addAI({loading:true});
-  let reply='',bad=false;
-  outer:for(const m of MODELS){for(let a=0;a<3;a++){
-    try{reply=await stream2(m,key,sys,contents,t=>o.set(t));if(reply)break outer;throw new Error('empty')}
-    catch(e){o.dots();
-      if(e.status===401||e.status===403||/api key/i.test(e.message)){bad=true;break outer}
-      if(e.status===404)break;
-      await sleep(1500*(a+1));}
-  }}
-  if(reply){c.msgs.push({r:'ai',t:reply});if(db.auto)setTimeout(()=>speak(reply,null),150)}
-  else c.msgs.push({r:'ai',err:true,t:bad?'API key சரியாக இல்லை. ☰ Menu → API Key-ல் சரிபார்க்கவும்.':'Vicky AI இப்போது கொஞ்சம் busy. சில நொடிகள் கழித்து மீண்டும் அனுப்புங்கள்.'});
-}
-async function toEnglish(text,key){
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[0]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Rewrite this as one short, vivid English image-generation prompt. Output only the prompt:\n'+text}]}]})});
-  const d=await r.json();return d.candidates[0].content.parts.map(p=>p.text||'').join('').trim();
-}
-async function makeImage(c,prompt,key){
-  const o=addAI({loading:true});
-  let p=prompt;
-  if(/[^\x00-\x7F]/.test(p)){try{p=(await toEnglish(p,key))||p}catch(e){}}
-  const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=768&height=768&nologo=true&seed='+Math.floor(Math.random()*1e6);
-  const ok=await new Promise(res=>{const im=new Image();im.onload=()=>res(true);im.onerror=()=>res(false);im.src=url;setTimeout(()=>res(false),90000)});
-  c.msgs.push(ok?{r:'ai',t:prompt,gen:url}:{r:'ai',err:true,t:'படம் உருவாக்க முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'});
-  setImageMode(false);
-} 
- async function toEnglish2(text,key,img){
-  const parts=[];
-  if(img)parts.push({inlineData:{mimeType:img.mimeType,data:img.data}});
-  parts.push({text:img
-    ?'Look at the attached photo. Write one detailed English prompt for an image generator that fulfils the user request below, keeping the same hairstyle and hair colour, skin tone, facial hair, outfit and its colours, and accessories as in the photo. Do not name or identify anyone. User request: '+text+'\nOutput only the prompt.'
-    :'Rewrite this as one short, vivid English image-generation prompt. Output only the prompt:\n'+text});
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODELS[0]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts}]})});
-  const d=await r.json();
-  return d.candidates[0].content.parts.map(p=>p.text||'').join('').trim();
-}
-async function makeImage2(c,prompt,key,img){
-  addAI({loading:true});
-  let p=prompt;
-  try{p=(await toEnglish2(prompt,key,img))||p}catch(e){}
-  p=p.slice(0,700);
-  const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=768&height=768&nologo=true&seed='+Math.floor(Math.random()*1e6);
-  const ok=await new Promise(res=>{const im=new Image();im.onload=()=>res(true);im.onerror=()=>res(false);im.src=url;setTimeout(()=>res(false),90000)});
-  c.msgs.push(ok?{r:'ai',t:prompt,gen:url}:{r:'ai',err:true,t:'படம் உருவாக்க முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'});
-  setImageMode(false);
-}
-async function geminiImage(key,prompt,img){
-  const parts=[];
-  if(img)parts.push({inlineData:{mimeType:img.mimeType,data:img.data}});
-  parts.push({text:img?'Edit the attached photo as requested. Keep the same face, hairstyle, skin tone and outfit recognisable. Request: '+prompt:prompt});
-  let lastErr='';
-  for(const m of ['gemini-3.1-flash-image','gemini-3.1-flash-image-preview','gemini-2.5-flash-image']){
-    try{
-      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseModalities:['TEXT','IMAGE']}})});
-      const d=await r.json();
-      if(!r.ok){lastErr=(d.error&&d.error.message)||('HTTP '+r.status);if(r.status===404)continue;throw new Error(lastErr)}
-      const ps=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];
-      const im=ps.find(p=>p.inlineData||p.inline_data);
-      if(im){const x=im.inlineData||im.inline_data;return 'data:'+(x.mimeType||x.mime_type||'image/png')+';base64,'+x.data}
-      lastErr='no image returned';
-    }catch(e){lastErr=e.message;break}
-  }
-  throw new Error(lastErr||'failed');
-}
-async function makeImage3(c,prompt,key,img){
-  addAI({loading:true});
-  let url=null,note='';
-  try{url=await geminiImage(key,prompt,img)}catch(e){note=e.message}
-  if(url){c.msgs.push({r:'ai',t:'[படம்] '+prompt,gen:url});setImageMode(false);return}
-  chat.lastElementChild.remove();
-  c.msgs.push({r:'ai',err:true,t:'Google-ன் image model உங்கள் free key-ல் கிடைக்கவில்லை ('+note.slice(0,90)+'). அதனால் இலவச முறையில் உருவாக்கப்பட்டது.'});
-  await makeImage3(c,prompt,key,img);
-} 
-  function nowLine(){
-  const d=new Date();
-  return 'Today is '+d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' (current year '+d.getFullYear()+'). Your training knowledge may be outdated and the real date is later than your training data. Never tell the user it is an earlier year, and never say a version number or date from the user is impossible. For latest versions, news or prices: use search if available, otherwise say you cannot verify it and tell what you last knew.\n\n';
-}
-let useSearch=true;
-async function stream2(model,key,sys,contents,onChunk){
-  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':streamGenerateContent?alt=sse';
-  const body={systemInstruction:{parts:[{text:sys}]},contents};
-  if(useSearch)body.tools=[{google_search:{}}];
-  const go=()=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
-  let r=await go();
-  if(!r.ok&&useSearch&&[400,403,429].includes(r.status)){useSearch=false;delete body.tools;r=await go()}
-  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}const e=new Error(m||'HTTP '+r.status);e.status=r.status;throw e}
-  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',full='';
-  for(;;){
-    const {done,value}=await rd.read();if(done)break;
-    buf+=dec.decode(value,{stream:true});const ls=buf.split('\n');buf=ls.pop();
-    for(const l of ls){
-      if(!l.startsWith('data:'))continue;const j=l.slice(5).trim();if(!j)continue;
-      try{const d=JSON.parse(j);const ps=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];
-        for(const p of ps)if(p.text&&!p.thought){full+=p.text;onChunk(full)}}catch(e){}
-    }
-  }
-  return full;
-}
-  /* ---------- send ---------- */
-async function send(){
-  if(busy)return;
-  const key=localStorage.getItem(KEY);
-  if(!key){openKey();return}
-  const text=input.value.trim();
-  if(!text&&!pending)return;
-  busy=true;sendBtn.disabled=true;if(recog){recog.onresult=null;recog.onend=null;try{recog.abort()}catch(e){}micIdle()}
-  let c=curChat();
-  if(!c){c={id:uid(),title:(text||'Screenshot').slice(0,40),proj:db.view==='project'?db.proj:null,msgs:[]};db.chats.unshift(c);db.cur=c.id}
-  db.view='chat';
-  const img=pending;pending=null;showPreview();
-  const um={r:'user',t:text||'இந்த screenshot-ல் என்ன பிரச்சினை? நான் எங்கே என்ன செய்ய வேண்டும்?',img:img&&img.preview,hadImg:!!img};
-  c.msgs.push(um);input.value='';autosize();save();render();renderList();
-  try{if(imageMode)await makeImage(c,um.t,key);else await chatReply(c,img,key)}catch(e){}
-  save();render();renderList();
-  busy=false;sendBtn.disabled=false;
-}
-
-/* ---------- screenshot ---------- */
-const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='image/*';fileInput.style.display='none';document.body.appendChild(fileInput);
-function showPreview(){
-  const pv=$('#preview');
-  if(!pending){pv.style.display='none';pv.innerHTML='';return}
-  pv.style.display='flex';
-  pv.innerHTML='<img src="'+pending.preview+'"><span style="flex:1">படம் சேர்ந்தது. Send தொடவும்.</span><button type="button" class="ib" id="rmImg" aria-label="Remove">'+ic('x',18)+'</button>';
-  $('#rmImg').onclick=()=>{pending=null;showPreview()};
-}
-$('#clipBtn').onclick=()=>fileInput.click();
-fileInput.onchange=()=>{
-  const f=fileInput.files[0];if(!f)return;
-  const rd=new FileReader();
-  rd.onload=()=>{const im=new Image();im.onload=()=>{
-    const s=Math.min(1,1280/Math.max(im.width,im.height));
-    const cv=document.createElement('canvas');cv.width=Math.round(im.width*s);cv.height=Math.round(im.height*s);
-    cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
-    const u=cv.toDataURL('image/jpeg',0.8);
-    pending={mimeType:'image/jpeg',data:u.split(',')[1],preview:u};showPreview();
-  };im.src=rd.result};
-  rd.readAsDataURL(f);fileInput.value='';
-};
-
-/* ---------- image mode ---------- */
-function setImageMode(v){
-  imageMode=v;$('#imgBtn').classList.toggle('on',v);
-  input.placeholder=v?'என்ன படம் வேண்டும்? விவரியுங்கள்...':'கேள்வி எழுதுங்கள்... Ask anything';
-}
-$('#imgBtn').onclick=()=>{setImageMode(!imageMode);input.focus()};
-
-/* ---------- voice ---------- */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let recog=null,listening=false;
-function micIdle(){listening=false;$('#micBtn').classList.remove('on');$('#micBtn').style.color=''}
-$('#micBtn').onclick=()=>{
-  if(!SR){alert('இந்த browser-ல் voice வசதி இல்லை. Chrome பயன்படுத்தவும்.');return}
-  if(listening){recog.stop();return}
-  recog=new SR();recog.lang='ta-IN';recog.interimResults=true;recog.continuous=false;
-  const base=input.value;
-  recog.onstart=()=>{listening=true;$('#micBtn').classList.add('on');$('#micBtn').style.color='#ef4444'};
-  recog.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;input.value=(base?base+' ':'')+t;autosize()};
-  recog.onend=micIdle;recog.onerror=micIdle;recog.start();
-};
-
-/* ---------- wiring ---------- */
-sendBtn.onclick=send;
-input.addEventListener('input',autosize);
-input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!matchMedia('(pointer:coarse)').matches){e.preventDefault();send()}});
-$('#menuBtn').onclick=openDrawer;$('#scrim').onclick=closeDrawer;
-$('#newBtn').onclick=newChat;$('#dNew').onclick=newChat;$('#dProj').onclick=newProject;
-const openKey=()=>{closeDrawer();$('#kIn').value=localStorage.getItem(KEY)||'';$('#modal').style.display='flex'};
-$('#dKey').onclick=openKey;
-$('#kSave').onclick=()=>{const k=$('#kIn').value.trim();if(k){localStorage.setItem(KEY,k);$('#modal').style.display='none'}};
-$('#kCancel').onclick=()=>{$('#modal').style.display='none'};
-$('#auto').checked=!!db.auto;
-$('#auto').onchange=e=>{db.auto=e.target.checked;save()};
-[['Python கற்றுக்கொடு',()=>{input.value='Python-ஐ ஆரம்பத்திலிருந்து எளிமையாகக் கற்றுக்கொடு';input.focus();autosize()}],
- ['படம் உருவாக்கு',()=>{setImageMode(true);input.focus()}],
- ['படிக்க உதவு',()=>{input.value='நான் படிக்கும் பாடத்தை எளிமையாகப் புரிய வை: ';input.focus();autosize()}],
- ['Screenshot-ல் உதவி',()=>fileInput.click()]
-].forEach(([t,f])=>{const b=document.createElement('button');b.className='sug';b.textContent=t;b.onclick=f;$('#sugs').append(b)});
-
-window.addEventListener('error',e=>{const b=document.createElement('div');b.style.cssText='position:fixed;top:0;left:0;right:0;background:#fee2e2;color:#991b1b;padding:8px;font-size:12px;z-index:99';b.textContent='Error: '+e.message;document.body.appendChild(b)});
-
-render();renderList();
-</script>
+<div class="pop" id="plusPop"></div>
+<div class="sheet" id="sheet"></div>
+<div id="live"><div id="orb"></div><div id="liveTxt" style="font-size:1.1em;color:var(--mute);min-height:3em"></div><button class="btn g" id="liveEnd">Close</button></div>
+<script src="app.js?v=1"></script>
 </body>
 </html>
